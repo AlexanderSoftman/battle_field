@@ -1,0 +1,8 @@
+*.pyc
+venv*
+logs
+build
+dist
+*.egg-info
+pipe_stream*
+__pycache__
