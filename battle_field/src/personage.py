@@ -18,7 +18,7 @@ class Personage(QGraphicsPixmapItem):
         self.setPos(pos)
         self.setRotation(angle)
         print("new tank created, coordinates: " + str(self.pos().x()) + " " + str(self.pos().y()))
-        self.speed = 0
+        self.speed = 10
         self.body_rotation_speed = 20
         self.setPixmap(QPixmap(self.tank_picture_path))
         self.setOffset(
@@ -33,7 +33,7 @@ class Personage(QGraphicsPixmapItem):
     def update(self):
         self.change_pos()
         self.add_new_angle()
-        # self.change_angle()
+        self.change_angle()
 
     def change_pos(self):
         x = self.pos().x() + self.speed * math.cos(
