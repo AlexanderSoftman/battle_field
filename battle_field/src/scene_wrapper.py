@@ -6,7 +6,7 @@ from personage import Personage
 
 class SceneWrapper(QGraphicsScene):
 
-    pers_count_maximum = 6
+    pers_count_maximum = 0
 
     def __init__(self, *xxx, **kwargs):
         QGraphicsScene.__init__(self, *xxx, **kwargs)
@@ -28,6 +28,18 @@ class SceneWrapper(QGraphicsScene):
             pos = QPointF(pos_x, pos_y)
             angle = qrand() % 360
             self.addItem(Personage(self, pos, angle))
+
+        pos_x = 0
+        pos_y = 0
+        pos = QPointF(pos_x, pos_y)
+        angle = 0
+        self.addItem(Personage(self, pos, angle))
+
+        pos_x = 500
+        pos_y = 200
+        pos = QPointF(pos_x, pos_y)
+        angle = 0
+        self.addItem(Personage(self, pos, angle))
 
     # check by timer that we have enough tanks on battle
     def timerEvent(self):

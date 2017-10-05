@@ -24,6 +24,7 @@ class Bullet(QGraphicsPixmapItem):
         self.setScale(0.05)
 
     def update(self):
+        from personage import Personage
         x = self.pos().x() + self.speed * math.cos(
             self.rotation() * math.pi / 180.0) * self.scene().dt
         y = self.pos().y() + self.speed * math.sin(
@@ -31,7 +32,8 @@ class Bullet(QGraphicsPixmapItem):
         self.setPos(x, y)
 
         for item in self.scene().collidingItems(self):
-            self.scene().removeItem(item)
-            self.scene().removeItem(self)
-            print("bullet killed someone!")
-            break
+            if isinstance(item, Personage):
+                self.scene().removeItem(item)
+                self.scene().removeItem(self)
+                print("bullet killed someone!")
+                break
