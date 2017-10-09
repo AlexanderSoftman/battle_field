@@ -38,7 +38,6 @@ class Tower(QGraphicsPixmapItem):
         self.change_angle()
         self.destroy()
 
-
     def enemy(self):
         # 1. search targets
         targets_list = self.scene().collidingItems(self.vision)
@@ -55,7 +54,8 @@ class Tower(QGraphicsPixmapItem):
                     (self.parentItem().mapToScene(1, 0)) -
                     (self.parentItem().mapToScene(0, 0))).normalized()
                 angle_to_target = 180.0 * math.acos(
-                    QVector2D.dotProduct(vect_to_target, vect_of_body)) / math.pi
+                    QVector2D.dotProduct(
+                        vect_to_target, vect_of_body)) / math.pi
 
                 vect_of_body_orto = QVector2D(
                     -vect_of_body.y(), vect_of_body.x())
