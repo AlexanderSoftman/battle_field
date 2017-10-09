@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPolygonF, QPixmap
 import math
 
 from tower import Tower
-
+from obstacle import Obstacle
 
 class Personage(QGraphicsPixmapItem):
 
@@ -34,6 +34,7 @@ class Personage(QGraphicsPixmapItem):
         self.change_pos()
         self.add_new_angle()
         self.change_angle()
+        self.bump_check()
 
     def change_pos(self):
         x = self.pos().x() + self.speed * math.cos(
@@ -58,3 +59,12 @@ class Personage(QGraphicsPixmapItem):
                 self.rotation() +
                 sign * self.body_rotation_speed * self.scene().dt
             )
+
+    def bump_check(self):
+        item_list = self.scene().collidingItems(self)
+        for item in item_list:
+            if (isinstance(item, Personage) and item is not self or
+                    isinstance(item, Obstacle)):
+                print("tank stopped by obstacle or other tank!")
+                self.speed = 0
+                break

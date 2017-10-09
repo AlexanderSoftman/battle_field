@@ -7,8 +7,8 @@ from obstacle import Obstacle
 
 class SceneWrapper(QGraphicsScene):
 
-    pers_count_maximum = 10
-    obstackles_count_maximum = 30
+    pers_count_maximum = 1
+    obstackles_count_maximum = 50
     safety_objects_distance = 100
 
     def __init__(self, *xxx, **kwargs):
@@ -48,7 +48,7 @@ class SceneWrapper(QGraphicsScene):
             pos_x = -1000 + qrand() % 2000
             pos_y = -1000 + qrand() % 2000
             pos = QPointF(pos_x, pos_y)
-            angle = qrand() % 360
+            angle = 0  # qrand() % 360
             # check that we don't collide with other tanks positions
             # and obstackles positions
             left_up_corner = QPointF(
@@ -73,8 +73,8 @@ class SceneWrapper(QGraphicsScene):
         for item in self.items():
             item.update()
         if len(self.items()) < self.pers_count_maximum:
-            pos_x = qrand() % 1000
-            pos_y = qrand() % 1000
+            pos_x = -1000 + qrand() % 2000
+            pos_y = -1000 + qrand() % 2000
             pos = QPointF(pos_x, pos_y)
             angle = qrand() % 360
             self.addItem(Personage(self, pos, angle))
