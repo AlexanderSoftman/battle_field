@@ -11,7 +11,7 @@ from obstacle import Obstacle
 
 class Personage(QGraphicsPixmapItem):
 
-    tank_picture_path = './src/images/tank.png'
+    tank_picture_path = './src/images/tank_3.png'
 
     def __init__(self, scene, pos, angle, bot_flag=True):
         QGraphicsPixmapItem.__init__(self)
@@ -88,12 +88,26 @@ class Personage(QGraphicsPixmapItem):
         # 1. find all lines
         my_all_lines = self.find_all_lines(self)
         item_all_lines = self.find_all_lines(item)
+        # for my_line in my_all_lines:
+            # print("my_line = " + str(my_line))
+        # for item_line in item_all_lines:
+            # print("item_line = " + str(item_line))
 
         # 2. find colliding lines and dots
         my_lines, my_dots = self.find_colliding_lines_and_dots(
             my_all_lines, item_all_lines, item)
         item_lines, item_dots = self.find_colliding_lines_and_dots(
             item_all_lines, my_all_lines, self)
+
+        # for my_line in my_lines:
+            # print("colliding my_line = " + str(my_line))
+        # for item_line in item_lines:
+            # print("colliding item_line = " + str(item_line))
+
+        # for my_dot in my_dots:
+            # print("my_dot in item = " + str(my_dot))
+        # for item_dot in item_dots:
+            # print("item_dot in my = " + str(item_dot))
 
         # 3. find move direction
         move_dir = self.find_moving_vect(my_all_lines, item_all_lines, item)
@@ -102,8 +116,10 @@ class Personage(QGraphicsPixmapItem):
         full_projection_list = []
 
         for my_dot in my_dots:
+            # print ("my dot = " + str(my_dot))
             # create parallel line:
             par_line = QLineF(my_dot, my_dot + move_dir.toPointF())
+            # print ("par line for my dot = " + str(par_line))
             # find all collisions with all lines of item:
             dots_intersected = []
             dot_intersected = QPointF()
@@ -128,32 +144,41 @@ class Personage(QGraphicsPixmapItem):
                             item_line.pointAt(1).y())) and
                         self.check_point_belongs_to_line(
                             item_line, dot_intersected)):
+                    # print ("add new intersect dot = " + str(dot_intersected))
                     dots_intersected.append(QPointF(dot_intersected))
             # all item lines checked.
             # create list of projections vectors from
             # my point to direction
             dot_products_for_my_dot = []
             for dot in dots_intersected:
+                # print("dot = " + str(dot))
                 vector = QVector2D(
                     QPointF(
                         dot.x() - my_dot.x(),
                         dot.y() - my_dot.y()))
                 dot_products_for_my_dot.append(
                     QVector2D.dotProduct(vector, move_dir))
+                # print("add dot product = " + str(
+                    # QVector2D.dotProduct(vector, move_dir)))
             # sort all dot product list
             dot_products_for_my_dot = sorted(
                 dot_products_for_my_dot,
                 key=lambda value: value)
+            # print("dot_products_for_my_dot sorted = " + str(
+                # dot_products_for_my_dot))
             # check that list is not empty,
             # get maximum value (-1 element)
             if len(dot_products_for_my_dot) > 0:
                 full_projection_list.append(
                     dot_products_for_my_dot[-1])
-
+            # print("add to full projection maximum projection: " + str(
+                # dot_products_for_my_dot[-1]))
         # for every item dots create list of collision with my lines
         for item_dot in item_dots:
+            # print("item_dot = " + str(item_dot))
             # create parallel line:
             par_line = QLineF(item_dot, item_dot + move_dir.toPointF())
+            # print("par_line for item_dot = " + str(par_line))
             # find all collisions with all lines of item:
             dots_intersected = []
             dot_intersected = QPointF()
@@ -177,7 +202,7 @@ class Personage(QGraphicsPixmapItem):
                         max(
                             my_line.pointAt(0).y(),
                             my_line.pointAt(1).y()))):
-
+                    # print("add new intersect dot = " + str(dot_intersected))
                     dots_intersected.append(QPointF(dot_intersected))
             # all my lines checked.
             # create list of projections vectors from
@@ -188,10 +213,14 @@ class Personage(QGraphicsPixmapItem):
                     item_dot - dot)
                 dot_products_for_item_dot.append(
                     QVector2D.dotProduct(vector, move_dir))
+                # print("add new dot_products_for_item_dot = " +
+                    # str(QVector2D.dotProduct(vector, move_dir)))
             # sort all dot product list
             dot_products_for_item_dot = sorted(
                 dot_products_for_item_dot,
                 key=lambda value: value)
+            # print("dot_products_for_item_dot sorted = " + str(
+                # dot_products_for_item_dot))
             # check that list is not empty,
             # get maximum value (-1 element)
             if len(dot_products_for_item_dot) > 0:
@@ -202,11 +231,15 @@ class Personage(QGraphicsPixmapItem):
         full_projection_list = sorted(
             full_projection_list,
             key=lambda value: value)
+        # print("full_projection_list sorted = " + str(
+            # full_projection_list))
 
-        # 9. move to maximum value from projection list
+        # 9. move to maximum value from projection listfull_projection_list[-1]
         if len(full_projection_list) > 0:
+            # print("pos before moving = " + str(self.pos()))
             self.setPos(
                 self.pos() + (move_dir * full_projection_list[-1]).toPointF())
+            # print("pos after moving = " + str(self.pos()))
 
     def find_all_lines(self, item):
 
@@ -260,8 +293,8 @@ class Personage(QGraphicsPixmapItem):
                         item.boundingRect().width() / 2,
                         - item.boundingRect().height() / 2))))
 
-        for part in parts_of_item:
-            print("part len = " + str(part.length()))
+        # for part in parts_of_item:
+            # print("part len = " + str(part.length()))
         return parts_of_item
 
     def find_colliding_lines_and_dots(self, tested_list, second_list, item):
@@ -277,7 +310,8 @@ class Personage(QGraphicsPixmapItem):
                 if (QLineF.BoundedIntersection == intersection_type and
                         test_line not in lines_list):
                     lines_list.append(QLineF(test_line))
-
+                    # print("find_colliding_lines_and_dots::add new colliding line" +
+                        # str(test_line))
         # find lines fully inside item:
         rect = QRectF(
             item.mapToScene(
@@ -293,19 +327,24 @@ class Personage(QGraphicsPixmapItem):
                 rect.contains(test_line.p2()) and
                     test_line not in lines_list):
                 lines_list.append(test_line)
+                # print("find_colliding_lines_and_dots::add new line in rect" +
+                    # str(test_line))
+
 
         if len(lines_list) > 1:
             for first in lines_list:
                 for second in lines_list:
                     if first != second:
                         if (first.p1() == second.p1() or
-                                first.p1() == second.p2() and
+                            first.p1() == second.p2() and
                                 first.p1() not in dots_list):
                                 dots_list.append(first.p1())
+                                # print("find_colliding_lines_and_dots::add colliding dot")
                         if (first.p2() == second.p1() or
-                                first.p2() == second.p2() and
+                            first.p2() == second.p2() and
                                 first.p2() not in dots_list):
                                 dots_list.append(first.p2())
+                                # print("find_colliding_lines_and_dots::add colliding dot")
 
         return lines_list, dots_list
 
@@ -358,7 +397,9 @@ class Personage(QGraphicsPixmapItem):
         normal_lines = sorted(
             normal_lines,
             key=lambda value: value.length())
-
+        # print("move direction = " + str(
+            # QVector2D(
+                # normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()))
         return QVector2D(
             normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()
 

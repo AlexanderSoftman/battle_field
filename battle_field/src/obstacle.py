@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap
 
 class Obstacle(QGraphicsPixmapItem):
 
-    obstacle_picture_path = './src/images/wall.png'
+    obstacle_picture_path = './src/images/wall_2.png'
 
     def __init__(self, scene, pos, angle):
         QGraphicsPixmapItem.__init__(self)
@@ -16,4 +16,4 @@ class Obstacle(QGraphicsPixmapItem):
         self.setOffset(
             - self.boundingRect().width() / 2,
             - self.boundingRect().height() / 2)
-        self.setScale(0.1)
+        self.setScale(0.2)
