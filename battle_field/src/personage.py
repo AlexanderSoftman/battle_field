@@ -4,7 +4,6 @@ from PyQt5.QtCore import qrand, QRectF, QLineF, QPointF
 from PyQt5.QtGui import QPixmap, QVector2D
 
 import math
-import sys
 
 from tower import Tower
 from obstacle import Obstacle
@@ -85,8 +84,6 @@ class Personage(QGraphicsPixmapItem):
                 self.move_us(item)
 
     def move_us(self, item):
-        move_dir = QVector2D(self.pos() - item.pos())
-        move_dir = move_dir.normalized()
 
         # 1. find all lines
         my_all_lines = self.find_all_lines(self)
@@ -99,7 +96,7 @@ class Personage(QGraphicsPixmapItem):
             item_all_lines, my_all_lines, self)
 
         # 3. find move direction
-
+        move_dir = self.find_moving_vect(my_all_lines, item_all_lines, item)
         # 4. for every my and item dot inside other object
         # create projection
         full_projection_list = []
@@ -211,121 +208,6 @@ class Personage(QGraphicsPixmapItem):
             self.setPos(
                 self.pos() + (move_dir * full_projection_list[-1]).toPointF())
 
-
-    def get_direction_info(self, item, direction, center_global):
-        # return list of projection points to direction
-        # vector to point (from center_global point)
-        # ----------------- x
-        # |               |
-        # |               |
-        # -----------------
-        # y
-        item_vectors = []
-        # right up
-        vector_to_point = QVector2D((
-            QPointF(
-                item.mapToScene(
-                    item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2))) -
-            center_global)
-        item_vectors.append(
-            QVector2D.dotProduct(vector_to_point, direction))
-
-        # right left
-        vector_to_point = QVector2D(
-            QPointF((
-                item.mapToScene(
-                    - item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2))) -
-            center_global)
-        item_vectors.append(
-            QVector2D.dotProduct(vector_to_point, direction))
-
-        # left down
-        vector_to_point = QVector2D(
-            QPointF((
-                item.mapToScene(
-                    - item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2))) -
-            center_global)
-        item_vectors.append(
-            QVector2D.dotProduct(vector_to_point, direction))
-
-        # right down
-        vector_to_point = QVector2D(
-            QPointF((
-                item.mapToScene(
-                    item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2))) -
-            center_global)
-        item_vectors.append(
-            QVector2D.dotProduct(vector_to_point, direction))
-
-        return item_vectors
-
-    def find_direction_vector(self, item):
-
-        # 0. find rect of item in scene coordinates:
-        item_rect = QRectF(
-            item.mapToScene(
-                QPointF(
-                    - item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2),
-                QPointF(
-                    item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-
-        # 1. find all lines of my and item in scene coordinates:
-        my_lines = find_all_lines_of_item(self)
-        item_lines = find_all_lines_of_item(item)
-
-        # 2. find all points of my
-        points_of_my = []
-        points_of_my.append(
-            item.mapToScene(
-                QPointF(
-                    item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-        points_of_my.append(
-            item.mapToScene(
-                QPointF(
-                    item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2)))
-        points_of_my.append(
-            item.mapToScene(
-                QPointF(
-                    - item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2)))
-        points_of_my.append(
-            item.mapToScene(
-                QPointF(
-                    - item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-
-        # 3. find points of my inside item
-        points_of_my_inside_item = []
-        for point in points_of_my:
-            if (item_rect.contains(point)):
-                points_of_my_inside_item.append(item)
-
-        # 4. find intersections of lines between me and item
-        points_of_intersections = []
-        point_of_intersection = QPointF()
-        for my_line, item_line in zip(my_lines, item_lines):
-            if (QLineF.BoundedIntersection ==
-                    item_line.intersect(my_line, point_of_intersection)):
-                points_of_intersections.append(point_of_intersection)
-
-        # 5. find lines inside object
-            # 5.1. we should join two lists togeather
-            # 5.2. we should move them to system coordinates of item
-            # 5.3. sort them by angle
-            # 5.4. extracts points and get 2 from list.
-            # each time we should check that they belongs to one line
-            # If the belongs to one line -> create line between 2 points
-            # 5.5. find normales vectors to these lines
-            # 5.6. get summ for all vectors
-
     def find_all_lines(self, item):
 
         parts_of_item = []
@@ -388,14 +270,13 @@ class Personage(QGraphicsPixmapItem):
         point_of_intersection = QPointF()
         # find bounded lines
         for test_line in tested_list:
-            #add instersection dots
+            # add instersection dots
             for second_line in second_list:
                 intersection_type = test_line.intersect(
                     second_line, point_of_intersection)
                 if (QLineF.BoundedIntersection == intersection_type and
                         test_line not in lines_list):
                     lines_list.append(QLineF(test_line))
-                    print("add bounded line")
 
         # find lines fully inside item:
         rect = QRectF(
@@ -412,7 +293,6 @@ class Personage(QGraphicsPixmapItem):
                 rect.contains(test_line.p2()) and
                     test_line not in lines_list):
                 lines_list.append(test_line)
-                print("add inside rect line")
 
         if len(lines_list) > 1:
             for first in lines_list:
@@ -429,101 +309,81 @@ class Personage(QGraphicsPixmapItem):
 
         return lines_list, dots_list
 
-    def find_dots_of_colliding_lines(self, dots_list, lines):
-        result_list = []
-        for dot in dots_list:
-            for line in lines:
-                if (
-                    min(
-                        line.pointAt(0).x(),
-                        line.pointAt(1).x()) <=
-                    dot.x() <=
-                    max(
-                        line.pointAt(0).x(),
-                        line.pointAt(1).x())) and (
-                    min(
-                        line.pointAt(0).y(),
-                        line.pointAt(1).y()) <=
-                    dot.y() <=
-                    max(
-                        line.pointAt(0).y(),
-                        line.pointAt(1).y())) and (
-                        dot not in result_list):
-                    result_list.append(dot)
-
-        return result_list
-
-    def find_dots_belongs_to_item(self, dots_list, item):
-        result_list = []
+    def find_moving_vect(self, my_lines, obj_lines, item):
+        all_dots_list = []
+        point_of_intersection = QPointF()
+        # find bounded lines
+        for my_line in my_lines:
+            # add instersection dots
+            for obj_line in obj_lines:
+                intersection_type = my_line.intersect(
+                    obj_line, point_of_intersection)
+                if QLineF.BoundedIntersection == intersection_type:
+                    all_dots_list.append(QPointF(point_of_intersection))
+        # find lines fully inside me:
         rect = QRectF(
-            item.mapToScene(
+            self.mapToScene(
                 QPointF(
-                    - item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2)),
-            item.mapToScene(
+                    - self.boundingRect().width() / 2,
+                    - self.boundingRect().height() / 2)),
+            self.mapToScene(
                 QPointF(
-                    item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-        print("QRectF = " + str(rect))
-        for dot in dots_list:
-            if rect.contains(dot):
-                result_list.append(dot)
-        for one in result_list:
-            print ("dot belong to list: " + str(one))
-        return result_list
-        #item_dots_x = []
-        #item_dots_y = []
+                    self.boundingRect().width() / 2,
+                    self.boundingRect().height() / 2)))
 
-        #for item_dot in item_dots:
-         #   item_dots_x.append(item_dot.x())
-          #  item_dots_y.append(item_dot.y())
+        for obj_line in obj_lines:
+            if (rect.contains(obj_line.p1()) and
+                    rect.contains(obj_line.p2())):
+                all_dots_list.append(obj_line.p1())
+                all_dots_list.append(obj_line.p2())
 
-        #for dot in dots_list:
-         #   if (
-          #      min(item_dots_x) <
-           #     dot.x() <
-            #    max(item_dots_x) and
-             #   min(item_dots_y) <
-              #  dot.y() <
-               # max(item_dots_y)
-            #):
-             #   result_list.append(dot)
-            #if rect.contains(dot):
-                #result_list.append(dot)
-        #return result_list
+        # sort list of dots
+        all_dots_list = sorted(
+            all_dots_list,
+            key=lambda value: (QLineF(
+                QPointF(0, 0),
+                item.mapToItem(item, value)).angle()))
 
-    def find_all_dots(self, item):
-        points_list = []
-        points_list.append(
-            item.mapToScene(
-                QPointF(
-                    item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-        points_list.append(
-            item.mapToScene(
-                QPointF(
-                    item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2)))
-        points_list.append(
-            item.mapToScene(
-                QPointF(
-                    - item.boundingRect().width() / 2,
-                    - item.boundingRect().height() / 2)))
-        points_list.append(
-            item.mapToScene(
-                QPointF(
-                    - item.boundingRect().width() / 2,
-                    item.boundingRect().height() / 2)))
-        return points_list
+        normal_lines = []
+        for idx_first, dot_first in enumerate(all_dots_list):
+            for idx_second, dot_second in enumerate(all_dots_list):
+                if (idx_first == idx_second + 1 or
+                    (idx_first == len(all_dots_list) - 1 and
+                        idx_second == 0)):
+                    normal_lines.append(
+                        QLineF(
+                            dot_first,
+                            dot_second).normalVector())
+
+        normal_lines = sorted(
+            normal_lines,
+            key=lambda value: value.length())
+
+        return QVector2D(
+            normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()
 
     def check_point_belongs_to_line(self, item_line, intersect_point):
         # y = kx + b
         # find k and b:
-        k = (
-            (item_line.y1() - item_line.y2()) /
-            (item_line.x1() - item_line.x2()))
-        b = item_line.y1() - k * item_line.x1()
-        if k * intersect_point.x() + b == intersect_point.y():
-            return True
+        # if x1 == x2 => line is x = number
+        if item_line.x1() - item_line.x2() != 0:
+            k = (
+                (item_line.y1() - item_line.y2()) /
+                (item_line.x1() - item_line.x2()))
+            b = item_line.y1() - k * item_line.x1()
+            if k * intersect_point.x() + b == intersect_point.y():
+                return True
+            else:
+                return False
         else:
-            return False
+            if (
+                item_line.x1() == intersect_point.x() and
+                intersect_point.y() >= min(
+                    item_line.y1(),
+                    item_line.y2()) and
+                intersect_point.y() <= max(
+                    item_line.y1(),
+                    item_line.y2())):
+                return True
+            else:
+                return False
