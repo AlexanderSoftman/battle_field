@@ -11,6 +11,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     sw = SceneWrapper()
     view = QGraphicsView(sw)
+    view.installEventFilter(sw)
     view.setRenderHint(QPainter.Antialiasing)
     view.setCacheMode(QGraphicsView.CacheBackground)
     view.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)

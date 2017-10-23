@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QGraphicsScene
-from PyQt5.QtCore import (QTimer, QTime, qrand, QPointF, QRectF)
+from PyQt5.QtCore import (QTimer, QTime, qrand, QPointF, QRectF, QEvent)
 
 from personage import Personage
 from obstacle import Obstacle
@@ -7,9 +7,18 @@ from obstacle import Obstacle
 
 class SceneWrapper(QGraphicsScene):
 
-    pers_count_maximum = 1
+    pers_count_maximum = 0
     obstackles_count_maximum = 50
     safety_objects_distance = 100
+
+    # define buttons
+    up = 16777235
+    down = 16777237
+    left = 16777234
+    right = 16777236
+    space = 32
+    cntrl = 16777249
+    alt = 16777251
 
     def __init__(self, *xxx, **kwargs):
         QGraphicsScene.__init__(self, *xxx, **kwargs)
@@ -40,6 +49,9 @@ class SceneWrapper(QGraphicsScene):
             # pos = QPointF(pos_x, pos_y)
             # angle = qrand() % 360
             # self.addItem(Personage(self, pos, angle))
+
+        self.my_personage = Personage(self, QPointF(500, -900), 0, False)
+        self.addItem(self.my_personage)
 
         # generate obstacles at battle_field
         pers_count_current = 0
@@ -78,3 +90,24 @@ class SceneWrapper(QGraphicsScene):
             pos = QPointF(pos_x, pos_y)
             angle = qrand() % 360
             self.addItem(Personage(self, pos, angle))
+
+    def eventFilter(self, object, event):
+        if event.type() == QEvent.KeyPress:
+            if event.key() == self.left:
+                self.my_personage.reduce_angle()
+            elif event.key() == self.right:
+                self.my_personage.increase_angle()
+            elif event.key() == self.up:
+                self.my_personage.increase_speed()
+            elif event.key() == self.down:
+                self.my_personage.reduce_speed()
+            elif event.key() == self.cntrl:
+                self.my_personage.tower.reduce_rotation_speed()
+            elif event.key() == self.alt:
+                self.my_personage.tower.increase_rotation_speed()
+            elif event.key() == self.space:
+                self.my_personage.tower.create_bullet()
+            # print(event.key())
+            return True
+        else:
+            return QGraphicsScene.eventFilter(self, object, event)

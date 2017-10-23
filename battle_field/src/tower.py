@@ -11,9 +11,10 @@ class Tower(QGraphicsPixmapItem):
 
     tower_picture_path = './src/images/head.png'
 
-    def __init__(self, scene, parent):
+    def __init__(self, scene, parent, bot_flag=True):
         super(Tower, self).__init__(parent)
-        self.rotation_speed = 5
+        self.rotation_speed_maximum = 5
+        self.rotation_speed = 0
         self.setPixmap(QPixmap(self.tower_picture_path))
         self.setOffset(
             - self.boundingRect().width() / 2,
@@ -32,11 +33,15 @@ class Tower(QGraphicsPixmapItem):
                 QPointF(self.vision_distance, - self.vision_distance / 2),
                 QPointF(self.vision_distance, self.vision_distance / 2)]),
             self)
+        self.bot_flag = bot_flag
 
     def update(self):
-        self.enemy()
-        self.change_angle()
-        self.destroy()
+        if (self.bot_flag):
+            self.enemy()
+            self.change_angle()
+            self.destroy()
+        else:
+            self.rotate_tower()
 
     def enemy(self):
         # 1. search targets
@@ -105,7 +110,7 @@ class Tower(QGraphicsPixmapItem):
                 sign = -1
             self.setRotation(
                 self.rotation() +
-                sign * self.rotation_speed * self.scene().dt
+                sign * self.rotation_speed_maximum * self.scene().dt
             )
 
     def destroy(self):
@@ -122,3 +127,19 @@ class Tower(QGraphicsPixmapItem):
                 self.mapToScene(QPointF(bullet_x, bullet_y)),
                 self.parentItem().rotation() + self.rotation()))
             self.last_shoot_time = self.scene().time.elapsed()
+
+    def rotate_tower(self):
+        self.setRotation(
+            self.rotation() +
+            self.rotation_speed * self.scene().dt
+        )
+
+    def increase_rotation_speed(self):
+        self.rotation_speed += 0.1 * self.rotation_speed_maximum
+        if self.rotation_speed > self.rotation_speed_maximum:
+            self.rotation_speed = self.rotation_speed_maximum
+
+    def reduce_rotation_speed(self):
+        self.rotation_speed -= 0.1 * self.rotation_speed_maximum
+        if math.fabs(self.rotation_speed) > self.rotation_speed_maximum:
+            self.rotation_speed = -self.rotation_speed_maximum
