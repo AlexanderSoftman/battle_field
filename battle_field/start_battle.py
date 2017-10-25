@@ -1,13 +1,10 @@
+import sys
 from PyQt5.QtWidgets import (QApplication, QGraphicsView)
 from PyQt5.QtGui import (QPainter)
-import sys
-
-# sys.path.append('./src/')
-
 from battle_field.scene_wrapper import SceneWrapper
 
-if __name__ == '__main__':
 
+def main():
     app = QApplication(sys.argv)
     sw = SceneWrapper()
     view = QGraphicsView(sw)
@@ -17,7 +14,9 @@ if __name__ == '__main__':
     view.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
     view.setDragMode(QGraphicsView.ScrollHandDrag)
     view.setWindowTitle("Battleground")
-    # view.resize(400, 300)
     view.show()
-
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
