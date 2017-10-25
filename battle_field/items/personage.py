@@ -1,17 +1,16 @@
-
+import math
+import os
 from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsRectItem
 from PyQt5.QtCore import qrand, QRectF, QLineF, QPointF
 from PyQt5.QtGui import QPixmap, QVector2D
-
-import math
-
-from tower import Tower
-from obstacle import Obstacle
+from battle_field.items.tower import Tower
+from battle_field.items.obstacle import Obstacle
+import battle_field
 
 
 class Personage(QGraphicsPixmapItem):
-
-    tank_picture_path = './src/images/tank_3.png'
+    tank_picture_path = os.path.join(
+        os.path.split(battle_field.__file__)[0], 'images/tank_3.png')
 
     def __init__(self, scene, pos, angle, bot_flag=True):
         QGraphicsPixmapItem.__init__(self)
@@ -84,7 +83,8 @@ class Personage(QGraphicsPixmapItem):
                 self.move_us(item)
 
     def move_us(self, item):
-
+        if not self.collidesWithItem(item):
+            return
         # 1. find all lines
         my_all_lines = self.find_all_lines(self)
         item_all_lines = self.find_all_lines(item)

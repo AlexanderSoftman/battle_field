@@ -4,7 +4,7 @@ import sys
 
 # sys.path.append('./src/')
 
-from scene_wrapper import SceneWrapper
+from battle_field.scene_wrapper import SceneWrapper
 
 if __name__ == '__main__':
 

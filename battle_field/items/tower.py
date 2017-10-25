@@ -1,15 +1,15 @@
-from PyQt5.QtCore import qrand, QPointF, QLineF
+import os
+import math
+from PyQt5.QtCore import qrand, QPointF
 from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsPolygonItem
 from PyQt5.QtGui import QPixmap, QPolygonF, QVector2D
-
-import math
-
-from bullet import Bullet
+from battle_field.items.bullet import Bullet
+import battle_field
 
 
 class Tower(QGraphicsPixmapItem):
-
-    tower_picture_path = './src/images/head.png'
+    tower_picture_path = os.path.join(
+        os.path.split(battle_field.__file__)[0], 'images/head.png')
 
     def __init__(self, scene, parent, bot_flag=True):
         super(Tower, self).__init__(parent)

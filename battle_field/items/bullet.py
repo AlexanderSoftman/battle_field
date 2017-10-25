@@ -1,12 +1,13 @@
+import os
+import math
 from PyQt5.QtGui import (QPixmap)
 from PyQt5.QtWidgets import QGraphicsPixmapItem
-
-import math
+import battle_field
 
 
 class Bullet(QGraphicsPixmapItem):
-
-    bullet_picture_path = './src/images/bullet.png'
+    bullet_picture_path = os.path.join(
+        os.path.split(battle_field.__file__)[0], 'images/bullet.png')
 
     # Create the bounding rectangle
     def __init__(self, scene, pos, angle):

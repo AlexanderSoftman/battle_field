@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QGraphicsScene
 from PyQt5.QtCore import (QTimer, QTime, qrand, QPointF, QRectF, QEvent)
 
-from personage import Personage
-from obstacle import Obstacle
+from battle_field.items.personage import Personage
+from battle_field.items.obstacle import Obstacle
 
 
 class SceneWrapper(QGraphicsScene):
@@ -78,7 +78,6 @@ class SceneWrapper(QGraphicsScene):
             if (permission_flag is True):
                 self.addItem(Personage(self, pos, angle))
                 pers_count_current += 1
-
 
     # check by timer that we have enough tanks on battle
     def timerEvent(self):
