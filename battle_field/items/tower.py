@@ -6,7 +6,11 @@ from PyQt5.QtGui import QPixmap, QPolygonF, QVector2D
 from battle_field.items.bullet import Bullet
 import battle_field.items.functions
 from battle_field.items.obstacle import Obstacle
+# from battle_field.items import obstacle
+
 import battle_field
+
+import sys
 
 
 class Tower(QGraphicsPixmapItem):
@@ -236,10 +240,8 @@ class Tower(QGraphicsPixmapItem):
         # we should filter items, we see only personages (except our parent)
         # and obstacles
         for item in items_in_vision_before_filtering:
-            if ((isinstance(item, type(self.parent)) and
-                item is not self.parent) or
-                    isinstance(item, Obstacle)):
-                    items_in_vision.append(item)
+            if (isinstance(item, Obstacle)):
+                items_in_vision.append(item)
         print("%s len items in vision" % (len(items_in_vision),))
         print("%s items in vision" % (items_in_vision,))
         if len(items_in_vision) == 0:

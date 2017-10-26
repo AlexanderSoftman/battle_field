@@ -18,7 +18,7 @@ class Personage(QGraphicsPixmapItem):
         self.rect = QGraphicsRectItem(QRectF(0, 0, 10, 10), self)
         self.setPos(pos)
         self.setRotation(angle)
-        self.speed = 10
+        self.speed = 0
         self.body_rotation_speed = 20
         self.setPixmap(QPixmap(self.tank_picture_path))
         self.setOffset(
