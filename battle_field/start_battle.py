@@ -9,11 +9,13 @@ def main():
     sw = SceneWrapper()
     view = QGraphicsView(sw)
     view.installEventFilter(sw)
-    view.setRenderHint(QPainter.Antialiasing)
+    view.setRenderHints(
+        QPainter.HighQualityAntialiasing | QPainter.SmoothPixmapTransform)
     view.setCacheMode(QGraphicsView.CacheBackground)
     view.setViewportUpdateMode(QGraphicsView.BoundingRectViewportUpdate)
     view.setDragMode(QGraphicsView.ScrollHandDrag)
     view.setWindowTitle("Battleground")
+    view.scale(4, 4)
     view.show()
     sys.exit(app.exec_())
 

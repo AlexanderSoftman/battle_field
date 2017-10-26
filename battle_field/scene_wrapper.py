@@ -8,7 +8,7 @@ from battle_field.items.obstacle import Obstacle
 class SceneWrapper(QGraphicsScene):
 
     pers_count_maximum = 0
-    obstackles_count_maximum = 50
+    obstackles_count_maximum = 0
     safety_objects_distance = 100
 
     # define buttons
@@ -22,7 +22,8 @@ class SceneWrapper(QGraphicsScene):
 
     def __init__(self, *xxx, **kwargs):
         QGraphicsScene.__init__(self, *xxx, **kwargs)
-        self.setSceneRect(-1000, -1000, 2000, 2000)
+        # self.setSceneRect(-1000, -1000, 2000, 2000)
+        self.setSceneRect(-100, -100, 200, 200)
         self.setItemIndexMethod(QGraphicsScene.NoIndex)
 
         # create timer
@@ -33,6 +34,8 @@ class SceneWrapper(QGraphicsScene):
         self.time = QTime()
         self.time.start()
         # self.addRect(QRectF(0, 0, 10, 10))
+
+        self.create_scene()
 
         # create obstacles
         for i in range(self.obstackles_count_maximum):
@@ -50,8 +53,8 @@ class SceneWrapper(QGraphicsScene):
             # angle = qrand() % 360
             # self.addItem(Personage(self, pos, angle))
 
-        self.my_personage = Personage(self, QPointF(500, -900), 0, False)
-        self.addItem(self.my_personage)
+        # self.my_personage = Personage(self, QPointF(500, -900), 0, False)
+        # self.addItem(self.my_personage)
 
         # generate obstacles at battle_field
         pers_count_current = 0
@@ -106,7 +109,13 @@ class SceneWrapper(QGraphicsScene):
                 self.my_personage.tower.increase_rotation_speed()
             elif event.key() == self.space:
                 self.my_personage.tower.create_bullet()
-            # print(event.key())
+            print(event.key())
             return True
         else:
             return QGraphicsScene.eventFilter(self, object, event)
+
+    def create_scene(self):
+        self.my_personage = Personage(self, QPointF(0, 0), 0, False)
+        self.addItem(self.my_personage)
+        self.addItem(Obstacle(self, QPointF(100, 10), 0))
+        # self.addItem(Obstacle(self, QPointF(130, -10), 0))

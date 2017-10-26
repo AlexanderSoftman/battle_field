@@ -5,6 +5,7 @@ from PyQt5.QtCore import qrand, QRectF, QLineF, QPointF
 from PyQt5.QtGui import QPixmap, QVector2D
 from battle_field.items.tower import Tower
 from battle_field.items.obstacle import Obstacle
+import battle_field.items.functions
 import battle_field
 
 
@@ -86,8 +87,8 @@ class Personage(QGraphicsPixmapItem):
         if not self.collidesWithItem(item):
             return
         # 1. find all lines
-        my_all_lines = self.find_all_lines(self)
-        item_all_lines = self.find_all_lines(item)
+        my_all_lines = functions.find_all_lines(self)
+        item_all_lines = functions.find_all_lines(item)
         # for my_line in my_all_lines:
             # print("my_line = " + str(my_line))
         # for item_line in item_all_lines:
@@ -142,7 +143,7 @@ class Personage(QGraphicsPixmapItem):
                         max(
                             item_line.pointAt(0).y(),
                             item_line.pointAt(1).y())) and
-                        self.check_point_belongs_to_line(
+                        functions.check_point_belongs_to_line(
                             item_line, dot_intersected)):
                     # print ("add new intersect dot = " + str(dot_intersected))
                     dots_intersected.append(QPointF(dot_intersected))
@@ -240,62 +241,6 @@ class Personage(QGraphicsPixmapItem):
             self.setPos(
                 self.pos() + (move_dir * full_projection_list[-1]).toPointF())
             # print("pos after moving = " + str(self.pos()))
-
-    def find_all_lines(self, item):
-
-        parts_of_item = []
-        # 1. find all lines of item in scene coordinates:
-        # top line
-        parts_of_item.append(
-            QLineF(
-                item.mapToScene(
-                    QPointF(
-                        item.boundingRect().width() / 2,
-                        - item.boundingRect().height() / 2)),
-                item.mapToScene(
-                    QPointF(
-                        - item.boundingRect().width() / 2,
-                        - item.boundingRect().height() / 2))))
-
-        # left line
-        parts_of_item.append(
-            QLineF(
-                item.mapToScene(
-                    QPointF(
-                        - item.boundingRect().width() / 2,
-                        - item.boundingRect().height() / 2)),
-                item.mapToScene(
-                    QPointF(
-                        - item.boundingRect().width() / 2,
-                        item.boundingRect().height() / 2))))
-
-        # bottom line
-        parts_of_item.append(
-            QLineF(
-                item.mapToScene(
-                    QPointF(
-                        - item.boundingRect().width() / 2,
-                        item.boundingRect().height() / 2)),
-                item.mapToScene(
-                    QPointF(
-                        item.boundingRect().width() / 2,
-                        item.boundingRect().height() / 2))))
-
-        # right line
-        parts_of_item.append(
-            QLineF(
-                item.mapToScene(
-                    QPointF(
-                        item.boundingRect().width() / 2,
-                        item.boundingRect().height() / 2)),
-                item.mapToScene(
-                    QPointF(
-                        item.boundingRect().width() / 2,
-                        - item.boundingRect().height() / 2))))
-
-        # for part in parts_of_item:
-            # print("part len = " + str(part.length()))
-        return parts_of_item
 
     def find_colliding_lines_and_dots(self, tested_list, second_list, item):
         lines_list = []
@@ -402,29 +347,3 @@ class Personage(QGraphicsPixmapItem):
                 # normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()))
         return QVector2D(
             normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()
-
-    def check_point_belongs_to_line(self, item_line, intersect_point):
-        # y = kx + b
-        # find k and b:
-        # if x1 == x2 => line is x = number
-        if item_line.x1() - item_line.x2() != 0:
-            k = (
-                (item_line.y1() - item_line.y2()) /
-                (item_line.x1() - item_line.x2()))
-            b = item_line.y1() - k * item_line.x1()
-            if k * intersect_point.x() + b == intersect_point.y():
-                return True
-            else:
-                return False
-        else:
-            if (
-                item_line.x1() == intersect_point.x() and
-                intersect_point.y() >= min(
-                    item_line.y1(),
-                    item_line.y2()) and
-                intersect_point.y() <= max(
-                    item_line.y1(),
-                    item_line.y2())):
-                return True
-            else:
-                return False
