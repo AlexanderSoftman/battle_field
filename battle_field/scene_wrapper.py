@@ -23,7 +23,7 @@ class SceneWrapper(QGraphicsScene):
     def __init__(self, *xxx, **kwargs):
         QGraphicsScene.__init__(self, *xxx, **kwargs)
         # self.setSceneRect(-1000, -1000, 2000, 2000)
-        self.setSceneRect(-100, -100, 200, 200)
+        self.setSceneRect(-500, -500, 1000, 1000)
         self.setItemIndexMethod(QGraphicsScene.NoIndex)
 
         # create timer
@@ -117,5 +117,12 @@ class SceneWrapper(QGraphicsScene):
     def create_scene(self):
         self.my_personage = Personage(self, QPointF(0, 0), 0, False)
         self.addItem(self.my_personage)
-        self.addItem(Obstacle(self, QPointF(100, 10), 0))
-        # self.addItem(Obstacle(self, QPointF(130, -10), 0))
+        obstacle_1 = Obstacle(self, QPointF(100, 10), 0)
+        obstacle_2 = Obstacle(self, QPointF(330, -10), 0)
+        obstacle_3 = Obstacle(self, QPointF(330, -100), 0)
+        self.addItem(obstacle_1)
+        self.addItem(obstacle_2)
+        self.addItem(obstacle_3)
+        obstacle_1.setVisible(True)
+        obstacle_2.setVisible(True)
+        obstacle_3.setVisible(True)
