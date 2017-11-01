@@ -3,6 +3,7 @@ import math
 from PyQt5.QtGui import (QPixmap)
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 import battle_field
+from battle_field.items import personage
 
 
 class Bullet(QGraphicsPixmapItem):
@@ -25,7 +26,7 @@ class Bullet(QGraphicsPixmapItem):
         self.setScale(0.05)
 
     def update(self):
-        from personage import Personage
+
         x = self.pos().x() + self.speed * math.cos(
             self.rotation() * math.pi / 180.0) * self.scene().dt
         y = self.pos().y() + self.speed * math.sin(
@@ -33,8 +34,7 @@ class Bullet(QGraphicsPixmapItem):
         self.setPos(x, y)
 
         for item in self.scene().collidingItems(self):
-            if isinstance(item, Personage):
+            if isinstance(item, personage.Personage):
                 self.scene().removeItem(item)
                 self.scene().removeItem(self)
-                print("bullet killed someone!")
                 break

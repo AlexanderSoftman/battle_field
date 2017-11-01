@@ -1,19 +1,16 @@
 import os
 import math
-from PyQt5.QtCore import qrand, QPointF, QLineF, Qt
-from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsPolygonItem
-from PyQt5.QtGui import QPixmap, QPolygonF, QVector2D
-from battle_field.items.bullet import Bullet
-import battle_field.items.functions
-from battle_field.items.obstacle import Obstacle
-# from battle_field.items import obstacle
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import QtGui
+from battle_field.items import bullet
+from battle_field.common import functions
+from battle_field.items import obstacle
 
 import battle_field
 
-import sys
 
-
-class Tower(QGraphicsPixmapItem):
+class Tower(QtWidgets.QGraphicsPixmapItem):
     tower_picture_path = os.path.join(
         os.path.split(battle_field.__file__)[0], 'images/head.png')
 
@@ -22,7 +19,7 @@ class Tower(QGraphicsPixmapItem):
         self.parent = parent
         self.rotation_speed_maximum = 5
         self.rotation_speed = 0
-        self.setPixmap(QPixmap(self.tower_picture_path))
+        self.setPixmap(QtGui.QPixmap(self.tower_picture_path))
         self.setOffset(
             - self.boundingRect().width() / 2,
             - self.boundingRect().height() / 2)
@@ -33,77 +30,62 @@ class Tower(QGraphicsPixmapItem):
         self.angle_period = 7000
         self.destination_angle = self.rotation()
         self.safety_distance = 400
-        #self.vision_distance = 5000
-        #debug only value
-        self.vision_distance = 3000
-        self.vision_ideal = QPolygonF([
-            QPointF(0, 0),
-            QPointF(self.vision_distance, - self.vision_distance / 2),
-            QPointF(self.vision_distance, self.vision_distance / 2)])
+        self.vision_distance = 5000
+        # debug only small value
+        # self.vision_distance = 3000
+        self.vision_ideal = QtGui.QPolygonF([
+            QtCore.QPointF(0, 0),
+            QtCore.QPointF(self.vision_distance, - self.vision_distance / 2),
+            QtCore.QPointF(self.vision_distance, self.vision_distance / 2)])
         self.vision_shape = self.vision_ideal
-        self.vision = QGraphicsPolygonItem(
+        self.shadow_shape_list = []
+        self.shadow_brush = QtGui.QBrush(
+            QtGui.QColor(210, 210, 210, 255),
+            QtCore.Qt.SolidPattern)
+        self.vision = QtWidgets.QGraphicsPolygonItem(
             self.vision_shape,
             self)
         self.vision_lines = []
         self.vision_lines.append(
-            QLineF(
-                QPointF(0, 0),
-                QPointF(self.vision_distance, - self.vision_distance / 2)))
+            QtCore.QLineF(
+                QtCore.QPointF(0, 0),
+                QtCore.QPointF(
+                    self.vision_distance, - self.vision_distance / 2)))
         self.vision_lines.append(
-            QLineF(
-                QPointF(0, 0),
-                QPointF(self.vision_distance, self.vision_distance / 2)))
-        self.behind_line = QLineF(
-            QPointF(self.vision_distance, - self.vision_distance / 2),
-            QPointF(self.vision_distance, self.vision_distance / 2))
+            QtCore.QLineF(
+                QtCore.QPointF(0, 0),
+                QtCore.QPointF(
+                    self.vision_distance, self.vision_distance / 2)))
+        self.behind_line = QtCore.QLineF(
+            QtCore.QPointF(self.vision_distance, - self.vision_distance / 2),
+            QtCore.QPointF(self.vision_distance, self.vision_distance / 2))
         self.vision_lines.append(self.behind_line)
         self.bot_flag = bot_flag
 
     def update(self):
         self.update_vision()
-        # debug only - check enemies after change vision
-        items_in_vision_after_filtering = self.scene().collidingItems(
-            self.vision)
-        for item in items_in_vision_after_filtering:
-            if (isinstance(item, Obstacle)):
-                print("find new obstacle " + str(item))
         if (self.bot_flag):
             self.enemy()
             self.change_angle()
             self.destroy()
         else:
             self.rotate_tower()
-# 0. assign to vision_shape ideal vision
-# 1. find all colliding with vision items
-# 2. find all lines of item inside poligonf
-# 3. find lines only inside vision poligonf
-# 4. find shadows for every item in vision
-# 4.1. find shadow for every line of item
-# 4.2. union shadows
-# 4.3. substract from shadow item poligonf
-# (so we wprint("analyze %s line" % (line, ))ill see item after that)
-# 5. substract all shadows from ideal vision
-# 6. assign current shape to PolygonItem
 
     def update_vision(self):
-        print("=================================================")
         # 0. assign to vision_shape ideal vision
         self.vision.setVisible(False)
-        self.vision_shape = QPolygonF(self.vision_ideal)
+        self.vision_shape = QtGui.QPolygonF(self.vision_ideal)
+        for shadow in self.shadow_shape_list:
+            shadow.setParentItem(None)
+        del self.shadow_shape_list[:]
         # 1. find all colliding with vision items
         items_in_vision_before_filtering = self.scene().collidingItems(
             self.vision)
         items_in_vision = []
-        # print(
-            # "items_in_vision_before_filtering = %s" % (
-                # items_in_vision_before_filtering,))
-        # we should filter items, we see only personages (except our parent)
-        # and obstacles
         for item in items_in_vision_before_filtering:
-            if (isinstance(item, Obstacle)):
+            if (isinstance(item, obstacle.Obstacle)):
                 items_in_vision.append(item)
-        # print("%s len items in vision" % (len(items_in_vision),))
-        # print("items in vision: %s " % (items_in_vision,))
+        # sort list by distance
         if len(items_in_vision) == 0:
             # reset vision to ideal
             self.vision.setPolygon(self.vision_ideal)
@@ -112,59 +94,54 @@ class Tower(QGraphicsPixmapItem):
         shadows = []
         for item in items_in_vision:
             all_lines_of_item = (
-                battle_field.items.functions.find_all_lines_in_my_sc(
+                functions.find_all_lines_in_my_sc(
                     item, self))
             # create item polygonf - need it later
             all_dots_of_item = []
             for line in all_lines_of_item:
                 all_dots_of_item.append(line.p1())
-            item_shape_my_sc = QPolygonF(all_dots_of_item)
+            # item_shape_my_sc = QtGui.QPolygonF(all_dots_of_item)
             # 3. find lines only inside vision poligonf
             lines_in_vision = self.find_lines_in_ideal_vision(
                 all_lines_of_item)
-            # print("%s lines_in_vision" % (lines_in_vision,))
             # 4. find shadows for every item in vision
-            shadow_item = QPolygonF()
+            # shadow_item = QtGui.QPolygonF()
             for line in lines_in_vision:
                 # 4.1. find shadow for every line of item
                 shadow_line = self.find_shadow(line)
-                # 4.2. union shadows
-                shadow_item = shadow_item.united(shadow_line)
-            # 4.3. substract item shape from vision
-            shadow_item = shadow_item.subtracted(
-                item_shape_my_sc)
-            shadows.append(shadow_item)
-        # 5. create shadow union
-        full_shadow = QPolygonF()
+                shadows.append(shadow_line)
         for shadow in shadows:
-            full_shadow = full_shadow.united(shadow)
-        # 6. substract full shadow from ideal vision
-        self.vision_shape = self.vision_shape.subtracted(
-            full_shadow)
-        # 7. assign current shape to PolygonItem
+            self.shadow_shape_list.append(
+                QtWidgets.QGraphicsPolygonItem(
+                    shadow,
+                    self))
+            self.shadow_shape_list[-1].setPen(
+                QtGui.QPen(QtGui.QColor(0, 0, 0, 0)))
+            self.shadow_shape_list[-1].setBrush(self.shadow_brush)
+            self.shadow_shape_list[-1].setVisible(True)
+        # 5. assign current shape to PolygonItem
         self.vision.setPolygon(self.vision_shape)
         self.vision.setVisible(True)
 
-
     def find_shadow(self, line):
         behind_line_intersections = []
-        point_of_intersection = QPointF()
-        intersection_type = QLineF(
+        point_of_intersection = QtCore.QPointF()
+        intersection_type = QtCore.QLineF(
             line.p1(),
-            QPointF(0, 0)).intersect(
+            QtCore.QPointF(0, 0)).intersect(
             self.behind_line, point_of_intersection)
-        if (QLineF.BoundedIntersection == intersection_type or
-                QLineF.UnboundedIntersection == intersection_type):
+        if (QtCore.QLineF.BoundedIntersection == intersection_type or
+                QtCore.QLineF.UnboundedIntersection == intersection_type):
             behind_line_intersections.append(point_of_intersection)
-        point_of_intersection = QPointF()
-        intersection_type = QLineF(
+        point_of_intersection = QtCore.QPointF()
+        intersection_type = QtCore.QLineF(
             line.p2(),
-            QPointF(0, 0)).intersect(
+            QtCore.QPointF(0, 0)).intersect(
             self.behind_line, point_of_intersection)
-        if (QLineF.BoundedIntersection == intersection_type or
-                QLineF.UnboundedIntersection == intersection_type):
+        if (QtCore.QLineF.BoundedIntersection == intersection_type or
+                QtCore.QLineF.UnboundedIntersection == intersection_type):
             behind_line_intersections.append(point_of_intersection)
-        return QPolygonF(
+        return QtGui.QPolygonF(
             [behind_line_intersections[0],
                 line.p1(),
                 line.p2(),
@@ -176,39 +153,40 @@ class Tower(QGraphicsPixmapItem):
         # lines fully inside vision
         for line in lines:
             if (self.vision_ideal.containsPoint(
-                line.p1(), Qt.OddEvenFill) and
+                line.p1(), QtCore.Qt.OddEvenFill) and
                     self.vision_ideal.containsPoint(
-                        line.p2(), Qt.OddEvenFill)):
+                        line.p2(), QtCore.Qt.OddEvenFill)):
                     lines_in_vision.append(line)
         # lines, part of which inside vision_ideal
         for line in lines:
             point_of_intersection_list = []
             for vision_line in self.vision_lines:
-                point_of_intersection = QPointF()
+                point_of_intersection = QtCore.QPointF()
                 intersection_type = vision_line.intersect(
                     line, point_of_intersection)
-                if QLineF.BoundedIntersection == intersection_type:
+                if QtCore.QLineF.BoundedIntersection == intersection_type:
                     point_of_intersection_list.append(point_of_intersection)
             # check if we have 2 points of intersection
             # so should create line without start and end of first line
             if len(point_of_intersection_list) == 2:
                 lines_in_vision.append(
-                    QLineF(
+                    QtCore.QLineF(
                         point_of_intersection_list[0],
                         point_of_intersection_list[1]))
             # check if we have 1 points of intersection
             # so should create line WITH start or end of first line
             if len(point_of_intersection_list) == 1:
                 # find start or end inside vision_ideal
-                if self.vision_ideal.containsPoint(line.p1(), Qt.OddEvenFill):
+                if self.vision_ideal.containsPoint(
+                        line.p1(), QtCore.Qt.OddEvenFill):
                     lines_in_vision.append(
-                        QLineF(
+                        QtCore.QLineF(
                             point_of_intersection_list[0],
                             line.p1()))
                 elif self.vision_ideal.containsPoint(
-                        line.p2(), Qt.OddEvenFill):
+                        line.p2(), QtCore.Qt.OddEvenFill):
                     lines_in_vision.append(
-                        QLineF(
+                        QtCore.QLineF(
                             point_of_intersection_list[0],
                             line.p2()))
         return lines_in_vision
@@ -221,22 +199,23 @@ class Tower(QGraphicsPixmapItem):
             if (isinstance(target, Tower)):
                 if target is self:
                     continue
-                vect_to_target = QVector2D(
+                vect_to_target = QtGui.QVector2D(
                     target.mapToScene(0, 0) - self.mapToScene(0, 0))
                 distance_to_target = vect_to_target.length()
                 vect_to_target = vect_to_target.normalized()
-                vect_of_body = QVector2D(
+                vect_of_body = QtGui.QVector2D(
                     (self.parentItem().mapToScene(1, 0)) -
                     (self.parentItem().mapToScene(0, 0))).normalized()
                 angle_to_target = 180.0 * math.acos(
-                    QVector2D.dotProduct(
+                    QtGui.QVector2D.dotProduct(
                         vect_to_target, vect_of_body)) / math.pi
 
-                vect_of_body_orto = QVector2D(
+                vect_of_body_orto = QtGui.QVector2D(
                     -vect_of_body.y(), vect_of_body.x())
 
                 # get sign of angle
-                sign = QVector2D.dotProduct(vect_to_target, vect_of_body_orto)
+                sign = QtGui.QVector2D.dotProduct(
+                    vect_to_target, vect_of_body_orto)
                 angle_to_target = \
                     angle_to_target if sign > 0 else - angle_to_target
 
@@ -269,7 +248,7 @@ class Tower(QGraphicsPixmapItem):
         if self.scene().time.elapsed() - self.last_angle_time > \
                 self.rotation():
             self.last_angle_time = self.scene().time.elapsed()
-            self.angle_period = -45 + (qrand() % 90)
+            self.angle_period = -45 + (QtCore.qrand() % 90)
 
     def change_angle(self):
         # print("angle dif: " + str(self.rotation() - self.destination_angle))
@@ -290,11 +269,11 @@ class Tower(QGraphicsPixmapItem):
     def create_bullet(self):
         if self.scene().time.elapsed() - self.last_shoot_time > \
                 self.shoot_period:
-            bullet_x = self.boundingRect().width()
-            bullet_y = 0
-            self.scene().addItem(Bullet(
+            Bullet_x = self.boundingRect().width()
+            Bullet_y = 0
+            self.scene().addItem(bullet.Bullet(
                 self.scene(),
-                self.mapToScene(QPointF(bullet_x, bullet_y)),
+                self.mapToScene(QtCore.QPointF(Bullet_x, Bullet_y)),
                 self.parentItem().rotation() + self.rotation()))
             self.last_shoot_time = self.scene().time.elapsed()
 
@@ -313,56 +292,3 @@ class Tower(QGraphicsPixmapItem):
         self.rotation_speed -= 0.1 * self.rotation_speed_maximum
         if math.fabs(self.rotation_speed) > self.rotation_speed_maximum:
             self.rotation_speed = -self.rotation_speed_maximum
-
-    def find_enemies(self):
-        # 1. find all colliding with vision items
-        # 2. find all lines of item inside poligonf
-        # 3. find lines only inside vision poligonf
-        # 4. find shadows for every item in vision
-            # 4.1. find shadow for every line of item
-            # 4.2. union shadows
-            # 4.3. substract from shadow item poligonf
-            # (so we will see item after that)
-        # 5. assign to vision_shape ideal vision
-        # 6. substract all shadows from ideal vision
-        # 7. assign current shape to PolygonItem
-        # 8. return filtered colliding items
-
-        # 1. find all colliding with vision items
-        items_in_vision = self.scene().collidingItems(self.vision)
-        print("%s count items_in_vision" % (
-            items_in_vision,))
-        if len(items_in_vision) == 0:
-            return items_in_vision
-        shadows = []
-        for item in items_in_vision:
-            # 2. find all lines of item
-            all_lines_of_item = functions.find_all_lines(item)
-            print("all lines of item %s " % (all_lines_of_item,))
-            # 3. find lines only inside vision poligonf
-            lines_in_vision = self.find_lines_in_ideal_vision(
-                all_lines_of_item)
-            print("lines of item in vision %s " % (lines_in_vision,))
-            # 4. find shadows for every item in vision
-            shadow_item = QPolygonF()
-            for line in lines_in_vision:
-                # 4.1. find shadow for every line of item
-                shadow_single = self.find_shadow(line)
-                # 4.2. union shadows
-                shadow_item.united(shadow_single)
-            # 4.3. substract from shadow item poligonf
-            shadow_item = shadow_item.substracted(
-                functions.find_poligon(item))
-            shadows.append(shadow_item)
-        # 5. assign to vision_shape ideal vision
-        self.vision_shape = self.vision_ideal
-        # 6. substract all shadows from ideal vision
-        for shadow in shadows:
-            self.vision_shape = self.vision_shape.substracted(
-                shadow)
-        # 7. assign current shape to PolygonItem
-        self.vision.setPolygon(self.vision_shape)
-        # 8. return filtered colliding items
-        print("%s count of colliding items" % (
-            self.scene().collidingItems(self.vision),))
-        return self.scene().collidingItems(self.vision)
