@@ -96,11 +96,11 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.udp_socket.bind(QtNetwork.QHostAddress.AnyIPv4, self.port);
         self.udp_socket.readyRead.connect(self.read_pending_datagrams)
 
-        self.personages = {}
-        self.personage_index = 0
+        self.personages = {0: self.my_personage}
+        self.personage_index = 1
 
     def read_pending_datagrams(self):
-        print('read_pending_datagrams')
+        # print('read_pending_datagrams')
         while (self.udp_socket.hasPendingDatagrams()):
             datagram = self.udp_socket.receiveDatagram()
             self.handle_request(datagram);
@@ -120,7 +120,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 res = {'data':{'id': self.personage_index}}
                 self.personage_index += 1
             elif data['cmd'] == 'delete_personage':
-                if data['data']['id'] not in self.personages:
+                if data['data']['id'] not in self.personages or data['data']['id'] == 0:
                     res = {'error':'personage_not_exit'}
                 else:
                     self.removeItem(self.personages[data['data']['id']])
@@ -135,11 +135,6 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                     res = {'error':'personage_not_exit'}
                 else:
                     self.personages[data['data']['id']].reduce_speed()
-            elif data['cmd'] == 'increase_speed':
-                if data['data']['id'] not in self.personages:
-                    res = {'error':'personage_not_exit'}
-                else:
-                    self.personages[data['data']['id']].increase_speed()
             elif data['cmd'] == 'reduce_angle':
                 if data['data']['id'] not in self.personages:
                     res = {'error':'personage_not_exit'}
@@ -164,7 +159,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 if data['data']['id'] not in self.personages:
                     res = {'error':'personage_not_exit'}
                 else:
-                    self.personages[data['data']['id']].create_bullet()
+                    self.personages[data['data']['id']].tower.create_bullet()
 
             self.udp_socket.writeDatagram(json.dumps(res).encode(), datagram.senderAddress(), datagram.senderPort())
         except json.decoder.JSONDecodeError as e:
