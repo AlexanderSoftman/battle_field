@@ -3,11 +3,15 @@ from PyQt5 import QtCore
 
 from battle_field.items import personage
 from battle_field.items import obstacle
+from PyQt5 import QtNetwork
+import json
+import logging 
 
+LOG = logging.getLogger(__name__)
 
 class SceneWrapper(QtWidgets.QGraphicsScene):
 
-    pers_count_maximum = 10
+    pers_count_maximum = 0
     obstackles_count_maximum = 20
     safety_objects_distance = 100
 
@@ -19,6 +23,8 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     space = 32
     cntrl = 16777249
     alt = 16777251
+
+    port = 7755
 
     def __init__(self, *xxx, **kwargs):
         QtWidgets.QGraphicsScene.__init__(self, *xxx, **kwargs)
@@ -83,6 +89,86 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 self.addItem(personage.Personage(self, pos, angle))
                 pers_count_current += 1
 
+        self.init_server()
+
+    def init_server(self):
+        self.udp_socket = QtNetwork.QUdpSocket()
+        self.udp_socket.bind(QtNetwork.QHostAddress.AnyIPv4, self.port);
+        self.udp_socket.readyRead.connect(self.read_pending_datagrams)
+
+        self.personages = {0: self.my_personage}
+        self.personage_index = 1
+
+    def read_pending_datagrams(self):
+        # print('read_pending_datagrams')
+        while (self.udp_socket.hasPendingDatagrams()):
+            datagram = self.udp_socket.receiveDatagram()
+            self.handle_request(datagram);
+
+    def handle_request(self, datagram):
+        try:
+            data = json.loads(datagram.data().data().decode())
+            res = {}
+            if data['cmd'] == 'create_personage':
+                cur_personage = personage.Personage(
+                    self, QtCore.QPointF(
+                        data['data']['pos'][0],
+                        data['data']['pos'][1]),
+                    0, False)
+                self.personages[self.personage_index] = cur_personage
+                self.addItem(cur_personage)
+                res = {'data':{'id': self.personage_index}}
+                self.personage_index += 1
+            elif data['cmd'] == 'delete_personage':
+                if data['data']['id'] not in self.personages or data['data']['id'] == 0:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.removeItem(self.personages[data['data']['id']])
+                    del self.personages[data['data']['id']]
+            elif data['cmd'] == 'increase_speed':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].increase_speed()
+            elif data['cmd'] == 'reduce_speed':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].reduce_speed()
+            elif data['cmd'] == 'reduce_angle':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].reduce_angle()
+            elif data['cmd'] == 'increase_angle':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].increase_angle()
+            elif data['cmd'] == 'reduce_rotation_speed':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].reduce_rotation_speed()
+            elif data['cmd'] == 'increase_rotation_speed':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].increase_rotation_speed()
+            elif data['cmd'] == 'create_bullet':
+                if data['data']['id'] not in self.personages:
+                    res = {'error':'personage_not_exit'}
+                else:
+                    self.personages[data['data']['id']].tower.create_bullet()
+
+            self.udp_socket.writeDatagram(json.dumps(res).encode(), datagram.senderAddress(), datagram.senderPort())
+        except json.decoder.JSONDecodeError as e:
+            LOG.exception(e)
+            self.udp_socket.writeDatagram(
+                json.dumps({'error':str(e)}).encode(),
+                datagram.senderAddress(),
+                datagram.senderPort())
+
     # check by timer that we have enough tanks on battle
     def timerEvent(self):
         for item in self.items():
@@ -110,7 +196,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 self.my_personage.tower.increase_rotation_speed()
             elif event.key() == self.space:
                 self.my_personage.tower.create_bullet()
-            print(event.key())
+            # print(event.key())
             return True
         else:
             return QtWidgets.QGraphicsScene.eventFilter(self, object, event)
