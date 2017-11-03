@@ -9,7 +9,7 @@ from battle_field.common import functions
 import battle_field
 
 
-class Personage(QtWidgets.QGraphicsPixmapItem):
+class Tank(QtWidgets.QGraphicsPixmapItem):
     tank_picture_path = os.path.join(
         os.path.split(battle_field.__file__)[0], 'images/tank.png')
 
@@ -20,39 +20,75 @@ class Personage(QtWidgets.QGraphicsPixmapItem):
         self.setPos(pos)
         self.setRotation(angle)
         self.speed = 0
-        self.body_rotation_speed = 20
+        self.Tank_rotation_speed = 20
         self.setPixmap(QtGui.QPixmap(self.tank_picture_path))
         self.setOffset(
             - self.boundingRect().width() / 2,
             - self.boundingRect().height() / 2)
         self.setScale(0.15)
         self.last_angle_time = scene.time.elapsed()
-        self.body_angle_period = 6000 + QtCore.qrand() % 5000
+        self.Tank_angle_period = 6000 + QtCore.qrand() % 5000
         self.destination_angle = self.rotation()
         self.tower = tower.Tower(scene, self, bot_flag)
         self.bot_flag = bot_flag
+        # self.health = health
+        # create special colour poligonf around our tank
+        if self.bot_flag is False:
+            print()
+            self.colour_bound = QtGui.QPolygonF([
+                QtCore.QPointF(
+                    - self.boundingRect().width() / 2,
+                    - self.boundingRect().height() / 2),
+                QtCore.QPointF(
+                    self.boundingRect().width() / 2,
+                    - self.boundingRect().height() / 2),
+                QtCore.QPointF(
+                    self.boundingRect().width() / 2,
+                    self.boundingRect().height() / 2),
+                QtCore.QPointF(
+                    - self.boundingRect().width() / 2,
+                    self.boundingRect().height() / 2)])
+            self.colour_bound_item = QtWidgets.QGraphicsPolygonItem(
+                self.colour_bound, self)
+            self.colour_bound_item_pen = QtGui.QPen(
+                QtGui.QColor(0, 0, 255, 255))
+            self.colour_bound_item_pen.setWidth(10)
+            self.colour_bound_item.setPen(
+                self.colour_bound_item_pen)
+            self.colour_bound_item.setVisible(True)
 
+    # interface
     def increase_speed(self):
         self.speed += 1
 
+    # interface
     def reduce_speed(self):
         self.speed -= 1
 
+    # interface
     def increase_angle(self):
         self.setRotation(
             self.rotation() + 2)
 
+    # interface
     def reduce_angle(self):
         self.setRotation(
             self.rotation() - 2)
 
+    # interface
+    def make_damage(self, damage_power):
+        self.health -= damage_power
+
+    # internal for Tank, called by timer
     def update(self):
         self.change_pos()
         self.bump_check()
+        # move to tank level
         if self.bot_flag:
             self.add_new_angle()
             self.change_angle()
 
+    # internal for Tank
     def change_pos(self):
         x = self.pos().x() + self.speed * math.cos(
             self.rotation() * math.pi / 180.0) * self.scene().dt
@@ -60,12 +96,14 @@ class Personage(QtWidgets.QGraphicsPixmapItem):
             self.rotation() * math.pi / 180.0) * self.scene().dt
         self.setPos(x, y)
 
+    # internal for Tank
     def add_new_angle(self):
         if self.scene().time.elapsed() - self.last_angle_time > \
-                self.body_angle_period:
+                self.Tank_angle_period:
             self.last_angle_time = self.scene().time.elapsed()
             self.destination_angle = -45 + (QtCore.qrand() % 90)
 
+    # internal for Tank
     def change_angle(self):
         if (self.rotation() != self.destination_angle):
             if (self.destination_angle - self.rotation() > 0):
@@ -74,16 +112,18 @@ class Personage(QtWidgets.QGraphicsPixmapItem):
                 sign = -1
             self.setRotation(
                 self.rotation() +
-                sign * self.body_rotation_speed * self.scene().dt
+                sign * self.Tank_rotation_speed * self.scene().dt
             )
 
+    # internal for Tank
     def bump_check(self):
         item_list = self.scene().collidingItems(self)
         for item in item_list:
-            if (isinstance(item, Personage) and item is not self or
+            if (isinstance(item, Tank) and item is not self or
                     isinstance(item, obstacle.Obstacle)):
                 self.move_us(item)
 
+    # internal for Tank
     def move_us(self, item):
         if not self.collidesWithItem(item):
             return
@@ -212,6 +252,7 @@ class Personage(QtWidgets.QGraphicsPixmapItem):
             self.setPos(
                 self.pos() + (move_dir * full_projection_list[-1]).toPointF())
 
+    # internal for Tank
     def find_colliding_lines_and_dots(self, tested_list, second_list, item):
         lines_list = []
         dots_list = []
@@ -257,6 +298,7 @@ class Personage(QtWidgets.QGraphicsPixmapItem):
 
         return lines_list, dots_list
 
+    # internal for Tank
     def find_moving_vect(self, my_lines, obj_lines, item):
         all_dots_list = []
         point_of_intersection = QtCore.QPointF()

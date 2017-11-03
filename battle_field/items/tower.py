@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from battle_field.items import bullet
+from battle_field.items import tank
 from battle_field.common import functions
 from battle_field.items import obstacle
 
@@ -40,7 +41,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         self.vision_shape = self.vision_ideal
         self.shadow_shape_list = []
         self.shadow_brush = QtGui.QBrush(
-            QtGui.QColor(210, 210, 210, 255),
+            QtGui.QColor(210, 210, 210, 20),
             QtCore.Qt.SolidPattern)
         self.vision = QtWidgets.QGraphicsPolygonItem(
             self.vision_shape,
@@ -62,8 +63,35 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         self.vision_lines.append(self.behind_line)
         self.bot_flag = bot_flag
 
+    # interface
+    def increase_rotation_speed(self):
+        self.rotation_speed += 0.1 * self.rotation_speed_maximum
+        if self.rotation_speed > self.rotation_speed_maximum:
+            self.rotation_speed = self.rotation_speed_maximum
+
+    # interface
+    def reduce_rotation_speed(self):
+        self.rotation_speed -= 0.1 * self.rotation_speed_maximum
+        if math.fabs(self.rotation_speed) > self.rotation_speed_maximum:
+            self.rotation_speed = -self.rotation_speed_maximum
+
+    #   interface
+    def create_bullet(self):
+        if self.scene().time.elapsed() - self.last_shoot_time > \
+                self.shoot_period:
+            Bullet_x = self.boundingRect().width()
+            Bullet_y = 0
+            self.scene().addItem(bullet.Bullet(
+                self.scene(),
+                self.mapToScene(QtCore.QPointF(Bullet_x, Bullet_y)),
+                self.parentItem().rotation() + self.rotation(),
+                self.parentItem().speed))
+            self.last_shoot_time = self.scene().time.elapsed()
+
+    # internal for tower, called by timer
     def update(self):
         self.update_vision()
+        # move to tank level
         if (self.bot_flag):
             self.enemy()
             self.change_angle()
@@ -71,6 +99,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         else:
             self.rotate_tower()
 
+    # internal for tower
     def update_vision(self):
         # 0. assign to vision_shape ideal vision
         self.vision.setVisible(False)
@@ -123,6 +152,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         self.vision.setPolygon(self.vision_shape)
         self.vision.setVisible(True)
 
+    # internal for tower
     def find_shadow(self, line):
         behind_line_intersections = []
         point_of_intersection = QtCore.QPointF()
@@ -147,6 +177,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                 line.p2(),
                 behind_line_intersections[1]])
 
+    # internal for tower
     def find_lines_in_ideal_vision(self, lines):
 
         lines_in_vision = []
@@ -191,11 +222,47 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                             line.p2()))
         return lines_in_vision
 
+    # internal for tower, bot only
     def enemy(self):
         # 1. search targets
-        targets_list = self.scene().collidingItems(self.vision)
+        all_items_partly_in_vision_list = self.scene().collidingItems(
+            self.vision, QtCore.Qt.IntersectsItemBoundingRect)
+        # all_items_fully_in_vision_list = self.scene().collidingItems(
+            # self.vision, QtCore.Qt.ContainsItemBoundingRect)
+        targets_partly_in_vision_list = []
+        # targets_fully_in_vision_list = []
+        # filter targets to tanks
+        for target in all_items_partly_in_vision_list:
+            if (isinstance(target, tank.Tank) and
+                    target is not self.parentItem()):
+                targets_partly_in_vision_list.append(target)
+        # for target in all_items_fully_in_vision_list:
+            # if (isinstance(target, tank.Tank) and
+                    # target is not self.parentItem()):
+                # targets_fully_in_vision_list.append(target)
+        # print("previos detected count of items fully in vision: %s" % (
+            # len(targets_fully_in_vision_list),))
+        print("previos detected count of items partly in vision: %s" % (
+            len(targets_partly_in_vision_list),))
+        # check all targets, at least partly in vision are not fully
+        # in at least one of shapes
+        for target in targets_partly_in_vision_list:
+            for shadow in self.shadow_shape_list:
+                # items_fully_inside_shadow = self.scene().collidingItems(
+                    # shadow, QtCore.Qt.ContainsItemBoundingRect)
+                items_partly_inside_shadow = self.scene().collidingItems(
+                    shadow, QtCore.Qt.IntersectsItemBoundingRect)
+                targets_partly_inside_shadow = []
+                for item in items_partly_inside_shadow:
+                    if (isinstance(item, tank.Tank) and
+                            item is not self.parentItem()):
+                        targets_partly_inside_shadow.append(item)
+                if (target in targets_partly_inside_shadow and
+                        target in targets_partly_in_vision_list):
+                    print("one target in shadow, remove from targets_list")
+                    targets_partly_in_vision_list.remove(target)
         enemies_info = []
-        for target in targets_list:
+        for target in targets_partly_in_vision_list:
             if (isinstance(target, Tower)):
                 if target is self:
                     continue
@@ -243,6 +310,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                     self.destination_angle = enemy[1]
                     break
 
+    # internal for tower, bot only
     def start_scanning(self):
         # find new destination angle
         if self.scene().time.elapsed() - self.last_angle_time > \
@@ -250,8 +318,8 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
             self.last_angle_time = self.scene().time.elapsed()
             self.angle_period = -45 + (QtCore.qrand() % 90)
 
+    # internal for tower, bot only
     def change_angle(self):
-        # print("angle dif: " + str(self.rotation() - self.destination_angle))
         if (self.rotation() != self.destination_angle):
             if (self.destination_angle - self.rotation() > 0):
                 sign = 1
@@ -262,33 +330,14 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                 sign * self.rotation_speed_maximum * self.scene().dt
             )
 
+    # internal for tower, bot only
     def destroy(self):
         if (math.fabs(self.rotation() - self.destination_angle) < 5):
             self.create_bullet()
 
-    def create_bullet(self):
-        if self.scene().time.elapsed() - self.last_shoot_time > \
-                self.shoot_period:
-            Bullet_x = self.boundingRect().width()
-            Bullet_y = 0
-            self.scene().addItem(bullet.Bullet(
-                self.scene(),
-                self.mapToScene(QtCore.QPointF(Bullet_x, Bullet_y)),
-                self.parentItem().rotation() + self.rotation()))
-            self.last_shoot_time = self.scene().time.elapsed()
-
+    # internal for tower
     def rotate_tower(self):
         self.setRotation(
             self.rotation() +
             self.rotation_speed * self.scene().dt
         )
-
-    def increase_rotation_speed(self):
-        self.rotation_speed += 0.1 * self.rotation_speed_maximum
-        if self.rotation_speed > self.rotation_speed_maximum:
-            self.rotation_speed = self.rotation_speed_maximum
-
-    def reduce_rotation_speed(self):
-        self.rotation_speed -= 0.1 * self.rotation_speed_maximum
-        if math.fabs(self.rotation_speed) > self.rotation_speed_maximum:
-            self.rotation_speed = -self.rotation_speed_maximum
