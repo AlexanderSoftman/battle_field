@@ -29,7 +29,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     tank_list = []
     # simple_tank_health = 100
 
-    port = 7755
+    port = 9999
 
     def __init__(self, *xxx, **kwargs):
         QtWidgets.QGraphicsScene.__init__(self, *xxx, **kwargs)
@@ -46,6 +46,8 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.time = QtCore.QTime()
         self.time.start()
         self.create_test_scene()
+        self.init_server()
+
 
         # create obstacle.Obstacles
         for i in range(self.obstackles_count_maximum):
@@ -97,14 +99,13 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 self.addItem(self.tank_list[-1])
                 tanks_count_current += 1
 
-        self.init_server()
-
     def init_server(self):
+        print("init_server: interface:0.0.0.0 port:%s" % (self.port, ))
         self.udp_socket = QtNetwork.QUdpSocket()
         self.udp_socket.bind(QtNetwork.QHostAddress.AnyIPv4, self.port)
         self.udp_socket.readyRead.connect(self.read_pending_datagrams)
 
-        self.personages = {0: self.my_personage}
+        self.personages = {0: self.my_tank} if hasattr(self, 'my_tank') else {}
         self.personage_index = 1
 
     def read_pending_datagrams(self):
