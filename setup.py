@@ -11,6 +11,7 @@ setup(
     entry_points={
         'console_scripts': [
             'battle_field= battle_field.start_battle:main',
+            'battle_field_client= battle_field.sample_client:main',
         ],
     },
     package_data={
