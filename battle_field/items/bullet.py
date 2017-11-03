@@ -17,9 +17,9 @@ class Bullet(QGraphicsPixmapItem):
     # Create the bounding rectangle
     def __init__(self, scene, pos, angle, initial_speed):
         QGraphicsPixmapItem.__init__(self)
-        print(
-            "bullet pos_x = " + str(pos.x()) + "pos_y = " +
-            str(pos.y()) + " angle = " + str(angle))
+        # print(
+        #     "bullet pos_x = " + str(pos.x()) + "pos_y = " +
+        #     str(pos.y()) + " angle = " + str(angle))
         self.setPos(pos)
         self.setRotation(angle)
         self.speed = self.basic_speed + initial_speed
