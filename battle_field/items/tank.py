@@ -17,6 +17,9 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         QtWidgets.QGraphicsPixmapItem.__init__(self)
         self.rect = QtWidgets.QGraphicsRectItem(
             QtCore.QRectF(0, 0, 10, 10), self)
+        # delete counter after debug!!!
+        self.built_li_shapes_list = []
+        # path brush
         self.setPos(pos)
         self.setRotation(angle)
         self.speed = 0
@@ -31,6 +34,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         self.destination_angle = self.rotation()
         self.tower = tower.Tower(scene, self, bot_flag)
         self.bot_flag = bot_flag
+        self.path_positions_list = []
         # self.health = health
         # create special colour poligonf around our tank
         if self.bot_flag is False:
@@ -84,9 +88,15 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         self.change_pos()
         self.bump_check()
         # move to tank level
-        if self.bot_flag:
-            self.add_new_angle()
-            self.change_angle()
+        # if self.bot_flag:
+            #if len(self.path_positions_list) == 0:
+                #self.build_li_shapes()
+            #else:
+                #pass
+                # self.correct_our_spped()
+
+            # self.add_new_angle()
+            # self.change_angle()
 
     # internal for Tank
     def change_pos(self):

@@ -94,7 +94,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         # move to tank level
         if (self.bot_flag):
             self.enemy()
-            self.change_angle()
+            # self.change_angle()
             self.destroy()
         else:
             self.rotate_tower()
@@ -242,8 +242,6 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                 # targets_fully_in_vision_list.append(target)
         # print("previos detected count of items fully in vision: %s" % (
             # len(targets_fully_in_vision_list),))
-        print("previos detected count of items partly in vision: %s" % (
-            len(targets_partly_in_vision_list),))
         # check all targets, at least partly in vision are not fully
         # in at least one of shapes
         for target in targets_partly_in_vision_list:

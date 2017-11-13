@@ -29,23 +29,23 @@ def main():
             if char == 'w':
                 cmd = {'cmd': 'increase_speed', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             elif char == 's':
                 cmd = {'cmd': 'reduce_speed', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             elif char == 'a':
                 cmd = {'cmd': 'reduce_angle', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             elif char == 'd':
                 cmd = {'cmd': 'increase_angle', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             elif char == ' ':
                 cmd = {'cmd': 'create_bullet', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             elif char == 'r':
                 cmd = {'cmd': 'create_personage', 'data': {'pos': [0, 0]}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
@@ -53,7 +53,7 @@ def main():
             elif char == 't':
                 cmd = {'cmd': 'delete_personage', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                sock.recv(128).decode()
             # print('char:%s type:%s ' % (char, type(char)))
         except socket.timeout as e:
             LOG.warning('socket error:%s' % (e,))
