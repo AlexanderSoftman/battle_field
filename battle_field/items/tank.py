@@ -12,6 +12,8 @@ import battle_field
 class Tank(QtWidgets.QGraphicsPixmapItem):
     tank_picture_path = os.path.join(
         os.path.split(battle_field.__file__)[0], 'images/tank.png')
+    explosion_pict_path = os.path.join(
+        os.path.split(battle_field.__file__)[0], 'images/explosion_2.png')
 
     def __init__(self, scene, pos, angle, bot_flag=True):
         QtWidgets.QGraphicsPixmapItem.__init__(self)
@@ -31,10 +33,11 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         self.destination_angle = self.rotation()
         self.tower = tower.Tower(scene, self, bot_flag)
         self.bot_flag = bot_flag
+        self.cycles_of_explosion = 7
+        self.exploded = False
         # self.health = health
         # create special colour poligonf around our tank
         if self.bot_flag is False:
-            print()
             self.colour_bound = QtGui.QPolygonF([
                 QtCore.QPointF(
                     - self.boundingRect().width() / 2,
@@ -87,6 +90,21 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         if self.bot_flag:
             self.add_new_angle()
             self.change_angle()
+        # explosion
+        if (self.exploded is True):
+            self.cycles_of_explosion -= 1
+        if self.cycles_of_explosion < 0:
+            self.scene().removeItem(self)
+
+    def destroy(self):
+        self.exploded = True
+        # remove our tower
+        self.scene().removeItem(
+            self.tower)
+        self.tower = None
+        self.setPixmap(
+            QtGui.QPixmap(
+                self.explosion_pict_path))
 
     # internal for Tank
     def change_pos(self):

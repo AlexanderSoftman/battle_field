@@ -192,7 +192,8 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 # self.scene().removeItem(one_tank.tank_body)
                 # self.tank_list.remove(one_tank)
         for item in self.items():
-            item.update()
+            if (item is not None):
+                item.update()
         if len(self.items()) < self.tank_bots_count_maximum:
             pos_x = -1000 + QtCore.qrand() % 2000
             pos_y = -1000 + QtCore.qrand() % 2000
@@ -225,7 +226,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
 
     def create_test_scene(self):
         self.my_tank = tank.Tank(
-            self, QtCore.QPointF(0, 0), 0, False)
+            self, QtCore.QPointF(0, 0), 90, False)
         self.addItem(self.my_tank)
         Obstacle_1 = obstacle.Obstacle(
             self, QtCore.QPointF(100, 10), 0)
@@ -239,6 +240,9 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         Obstacle_1.setVisible(True)
         Obstacle_2.setVisible(True)
         Obstacle_3.setVisible(True)
-        self.enemy_tank = tank.Tank(
-            self, QtCore.QPointF(700, 0), 180, True)
-        self.addItem(self.enemy_tank)
+        # self.enemy_tank = tank.Tank(
+            # self, QtCore.QPointF(700, 0), 180, True)
+        # self.enemy_tank_2 = tank.Tank(
+            # self, QtCore.QPointF(0, 180), 90, True)
+        # self.addItem(self.enemy_tank)
+        # self.addItem(self.enemy_tank_2)

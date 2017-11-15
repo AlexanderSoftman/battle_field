@@ -27,25 +27,27 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         self.setScale(0.9)
         self.last_shoot_time = scene.time.elapsed()
         self.last_angle_time = scene.time.elapsed()
-        self.shoot_period = 7000
+        # self.shoot_period = 7000
+        # debug only value = 700
+        self.shoot_period = 700
         self.angle_period = 7000
         self.destination_angle = self.rotation()
         self.safety_distance = 400
         self.vision_distance = 5000
         # debug only small value
         # self.vision_distance = 3000
-        self.vision_ideal = QtGui.QPolygonF([
-            QtCore.QPointF(0, 0),
-            QtCore.QPointF(self.vision_distance, - self.vision_distance / 2),
-            QtCore.QPointF(self.vision_distance, self.vision_distance / 2)])
-        self.vision_shape = self.vision_ideal
+        # self.vision_ideal = QtGui.QPolygonF([
+            #QtCore.QPointF(0, 0),
+            #QtCore.QPointF(self.vision_distance, - self.vision_distance / 2),
+            #QtCore.QPointF(self.vision_distance, self.vision_distance / 2)])
+        #self.vision_shape = self.vision_ideal
         self.shadow_shape_list = []
         self.shadow_brush = QtGui.QBrush(
             QtGui.QColor(210, 210, 210, 20),
             QtCore.Qt.SolidPattern)
-        self.vision = QtWidgets.QGraphicsPolygonItem(
-            self.vision_shape,
-            self)
+        #self.vision = QtWidgets.QGraphicsPolygonItem(
+            #self.vision_shape,
+            #self)
         self.vision_lines = []
         self.vision_lines.append(
             QtCore.QLineF(
@@ -62,6 +64,8 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
             QtCore.QPointF(self.vision_distance, self.vision_distance / 2))
         self.vision_lines.append(self.behind_line)
         self.bot_flag = bot_flag
+        self.vision_shape_visibility = False
+        self.vision_shadows_visibility = False
 
     # interface
     def increase_rotation_speed(self):
@@ -90,7 +94,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
 
     # internal for tower, called by timer
     def update(self):
-        self.update_vision()
+        # self.update_vision()
         # move to tank level
         if (self.bot_flag):
             self.enemy()
@@ -118,7 +122,8 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         if len(items_in_vision) == 0:
             # reset vision to ideal
             self.vision.setPolygon(self.vision_ideal)
-            self.vision.setVisible(True)
+            self.vision.setVisible(
+                self.vision_shape_visibility)
             return
         shadows = []
         for item in items_in_vision:
@@ -147,10 +152,12 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
             self.shadow_shape_list[-1].setPen(
                 QtGui.QPen(QtGui.QColor(0, 0, 0, 0)))
             self.shadow_shape_list[-1].setBrush(self.shadow_brush)
-            self.shadow_shape_list[-1].setVisible(True)
+            self.shadow_shape_list[-1].setVisible(
+                self.vision_shadows_visibility)
         # 5. assign current shape to PolygonItem
         self.vision.setPolygon(self.vision_shape)
-        self.vision.setVisible(True)
+        self.vision.setVisible(
+            self.vision_shape_visibility)
 
     # internal for tower
     def find_shadow(self, line):
