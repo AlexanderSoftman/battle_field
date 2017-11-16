@@ -2,11 +2,11 @@ import readchar
 import socket
 import json
 import logging
-from battle_field import scene_wrapper
+from battle_field import server
 LOG = logging.getLogger(__name__)
 
 UDP_IP = "127.0.0.1"
-UDP_PORT = scene_wrapper.SceneWrapper.port
+UDP_PORT = server.Server.port
 
 
 def main():
@@ -22,6 +22,7 @@ def main():
     sock.settimeout(0.5)
     char = 0
     _id = 0
+    print('connec to host:%s port:%s' % (UDP_IP, UDP_PORT))
 
     while char != 'q':
         try:
@@ -29,31 +30,36 @@ def main():
             if char == 'w':
                 cmd = {'cmd': 'increase_speed', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
             elif char == 's':
                 cmd = {'cmd': 'reduce_speed', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
             elif char == 'a':
                 cmd = {'cmd': 'reduce_angle', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
             elif char == 'd':
                 cmd = {'cmd': 'increase_angle', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
             elif char == ' ':
                 cmd = {'cmd': 'create_bullet', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
+                print(res)
             elif char == 'r':
                 cmd = {'cmd': 'create_personage', 'data': {'pos': [0, 0]}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                _id = json.loads(sock.recv(128).decode())['data']['id']
+                res = json.loads(sock.recv(128).decode())['data']
+                _id = res['id']
             elif char == 't':
                 cmd = {'cmd': 'delete_personage', 'data': {'id': _id}}
                 sock.sendto(json.dumps(cmd).encode(), (UDP_IP, UDP_PORT))
-                print(sock.recv(128).decode())
+                res = json.loads(sock.recv(128).decode())
+
+            if 'error' in res:
+                print(res['error'])
             # print('char:%s type:%s ' % (char, type(char)))
         except socket.timeout as e:
             LOG.warning('socket error:%s' % (e,))
