@@ -57,8 +57,6 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             # angle = 0
             self.addItem(obstacle.Obstacle(self, pos, 0))
 
-        # debug only return
-        return
 
         # create tanks objects (do not collide with obstackles!)
         # for i in range(self.pers_count_maximum):
@@ -68,10 +66,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         #     angle = QtCore.qrand() % 360
         #     self.addItem(tank.Tank(
         #         self, pos, angle, self.simple_tank_health))
-        self.my_tank = tank.Tank(
-            self, QtCore.QPointF(500, -900), 0, False)
-        self.addItem(self.my_tank)
-
+        return
         # generate obstacle.Obstacles at battle_field
         tanks_count_current = 0
         while (tanks_count_current < self.tank_bots_count_maximum):
@@ -100,14 +95,27 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 tanks_count_current += 1
 
     def mousePressEvent(self, event):
-        as_point = QtCore.QPointF(
-            self.enemy_tank.boundingRect().width() / 2,
-            self.enemy_tank.boundingRect().height() / 2)
-        as_point = self.enemy_tank.mapToScene(as_point)
-        bounder_maximum = max(abs(as_point.x()), abs(as_point.y()))
+        bounders = [
+            QtCore.QLineF(
+                self.my_tank.mapToScene(
+                    QtCore.QPointF(
+                        self.my_tank.boundingRect().width() / 2,
+                        0)),
+                self.my_tank.mapToScene(
+                    QtCore.QPointF(
+                        0, 0))).length(),
+            QtCore.QLineF(
+                self.my_tank.mapToScene(
+                    QtCore.QPointF(
+                        self.my_tank.boundingRect().height() / 2,
+                        0)),
+                self.my_tank.mapToScene(
+                    QtCore.QPointF(
+                        0, 0))).length()]
+        bounder_maximum = max(bounders[0], bounders[1])
         self.path_creator.create_li_shapes_tree(
             bounder_maximum,
-            self.enemy_tank.pos(),
+            self.my_tank.pos(),
             event.scenePos())
 
     def init_server(self):
@@ -235,9 +243,9 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             return QtWidgets.QGraphicsScene.eventFilter(self, object, event)
 
     def create_test_scene(self):
-        # self.my_tank = tank.Tank(
-            # self, QtCore.QPointF(0, 0), 0, False)
-        # self.addItem(self.my_tank)
+        self.my_tank = tank.Tank(
+            self, QtCore.QPointF(0, 0), 0, False)
+        self.addItem(self.my_tank)
         Obstacle_1 = obstacle.Obstacle(
             self, QtCore.QPointF(100, 10), 0)
         Obstacle_2 = obstacle.Obstacle(
@@ -250,6 +258,6 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         Obstacle_1.setVisible(True)
         Obstacle_2.setVisible(True)
         Obstacle_3.setVisible(True)
-        self.enemy_tank = tank.Tank(
-            self, QtCore.QPointF(1, 1), 120, True)
-        self.addItem(self.enemy_tank)
+        #self.enemy_tank = tank.Tank(
+            #self, QtCore.QPointF(1, 1), 120, True)
+        #self.addItem(self.enemy_tank)
