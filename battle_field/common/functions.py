@@ -33,6 +33,18 @@ def check_point_belongs_to_line(line, some_point):
             return False
 
 
+def check_line_contains_point(line, some_point):
+    if (
+        check_point_belongs_to_line(line, some_point) and
+            some_point.x() >= min(line.x1(), line.x2()) and
+            some_point.x() <= max(line.x1(), line.x2()) and
+            some_point.y() >= min(line.y1(), line.y2()) and
+            some_point.y() <= max(line.y1(), line.y2())):
+        return True
+    else:
+        return False
+
+
 def find_all_lines(item):
 
     parts_of_item = []
@@ -90,6 +102,7 @@ def find_all_lines(item):
     return parts_of_item
 
 
+# return list of QLineF: [QLineF1, QLineF2 ...]
 def find_all_lines_in_my_sc(item, me):
 
     parts_of_item = []

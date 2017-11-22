@@ -7,6 +7,7 @@ from battle_field.items import bullet
 from battle_field.items import tank
 from battle_field.common import functions
 from battle_field.items import obstacle
+from battle_field.items import lidar
 
 import battle_field
 
@@ -57,6 +58,14 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                 QtCore.QPointF(0, 0),
                 QtCore.QPointF(
                     self.vision_distance, self.vision_distance / 2)))
+        self.lidar = lidar.Lidar(
+            self,
+            30,
+            10,
+            60,
+            180,
+            2 * 6000,
+            None)
         self.behind_line = QtCore.QLineF(
             QtCore.QPointF(self.vision_distance, - self.vision_distance / 2),
             QtCore.QPointF(self.vision_distance, self.vision_distance / 2))
@@ -90,7 +99,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
 
     # internal for tower, called by timer
     def update(self):
-        self.update_vision()
+        # self.update_vision()
         # move to tank level
         if (self.bot_flag):
             self.enemy()

@@ -85,6 +85,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
 
     # internal for Tank, called by timer
     def update(self):
+        # print("pos = %s" % (self.pos(),))
         self.change_pos()
         self.bump_check()
         # move to tank level

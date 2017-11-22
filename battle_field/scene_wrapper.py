@@ -32,8 +32,9 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
 
     port = 9999
 
-    def __init__(self, *xxx, **kwargs):
+    def __init__(self, isw, *xxx, **kwargs):
         QtWidgets.QGraphicsScene.__init__(self, *xxx, **kwargs)
+        self.isw = isw
         self.setSceneRect(-1000, -1000, 2000, 2000)
         # small test scene
         # self.setSceneRect(-500, -500, 1000, 1000)
@@ -49,6 +50,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.create_test_scene()
         self.init_server()
 
+        return
         # create obstacle.Obstacles
         for i in range(self.obstackles_count_maximum):
             pos_x = -1000 + QtCore.qrand() % 2000
@@ -56,7 +58,6 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             pos = QtCore.QPointF(pos_x, pos_y)
             # angle = 0
             self.addItem(obstacle.Obstacle(self, pos, 0))
-
 
         # create tanks objects (do not collide with obstackles!)
         # for i in range(self.pers_count_maximum):
@@ -66,7 +67,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         #     angle = QtCore.qrand() % 360
         #     self.addItem(tank.Tank(
         #         self, pos, angle, self.simple_tank_health))
-        return
+        
         # generate obstacle.Obstacles at battle_field
         tanks_count_current = 0
         while (tanks_count_current < self.tank_bots_count_maximum):
@@ -95,6 +96,8 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 tanks_count_current += 1
 
     def mousePressEvent(self, event):
+        # turn off path creating while debug
+        return
         bounders = [
             QtCore.QLineF(
                 self.my_tank.mapToScene(
@@ -248,16 +251,16 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.addItem(self.my_tank)
         Obstacle_1 = obstacle.Obstacle(
             self, QtCore.QPointF(100, 10), 0)
-        Obstacle_2 = obstacle.Obstacle(
-            self, QtCore.QPointF(330, -10), 0)
-        Obstacle_3 = obstacle.Obstacle(
-            self, QtCore.QPointF(330, -100), 0)
+        #Obstacle_2 = obstacle.Obstacle(
+            #self, QtCore.QPointF(330, -10), 0)
+        #Obstacle_3 = obstacle.Obstacle(
+            #self, QtCore.QPointF(330, -100), 0)
         self.addItem(Obstacle_1)
-        self.addItem(Obstacle_2)
-        self.addItem(Obstacle_3)
+        #self.addItem(Obstacle_2)
+        #self.addItem(Obstacle_3)
         Obstacle_1.setVisible(True)
-        Obstacle_2.setVisible(True)
-        Obstacle_3.setVisible(True)
-        #self.enemy_tank = tank.Tank(
-            #self, QtCore.QPointF(1, 1), 120, True)
-        #self.addItem(self.enemy_tank)
+        #Obstacle_2.setVisible(True)
+        #Obstacle_3.setVisible(True)
+        # self.enemy_tank = tank.Tank(
+            # self, QtCore.QPointF(1, 1), 120, True)
+        # self.addItem(self.enemy_tank)
