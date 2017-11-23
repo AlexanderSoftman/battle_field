@@ -1,10 +1,15 @@
 import sys
 import os
+import logging
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from battle_field import scene_wrapper
 from battle_field import info_scene_wrapper
 from PyQt5 import uic
+
+
+LOG = logging.getLogger(__name__)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -43,6 +48,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def main():
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.debug('This is a log message.')
     app = QtWidgets.QApplication(sys.argv)
     main_window = MainWindow()
     main_window.show()

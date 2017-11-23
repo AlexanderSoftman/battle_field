@@ -1,8 +1,11 @@
 import math
+import logging
 
 from PyQt5.QtCore import QLineF, QPointF
 from PyQt5.QtGui import QPolygonF
 rounding_error = 0.00001
+
+LOG = logging.getLogger(__name__)
 
 
 def check_point_belongs_to_line(line, some_point):
@@ -24,22 +27,36 @@ def check_point_belongs_to_line(line, some_point):
                 line.x1(), some_point.x()) and
             some_point.y() >= min(
                 line.y1(),
-                line.y2()) and
+                line.y2() - rounding_error) and
             some_point.y() <= max(
                 line.y1(),
-                line.y2())):
+                line.y2()) + rounding_error):
+            # LOG.debug(
+                # "point %s belongs to line: %s" % (
+                    # some_point, line))
             return True
         else:
+            # LOG.debug(
+                # "point %s NOT belongs to line: %s" % (
+                    # some_point, line))
             return False
 
 
 def check_line_contains_point(line, some_point):
     if (
-        check_point_belongs_to_line(line, some_point) and
-            some_point.x() >= min(line.x1(), line.x2()) and
-            some_point.x() <= max(line.x1(), line.x2()) and
-            some_point.y() >= min(line.y1(), line.y2()) and
-            some_point.y() <= max(line.y1(), line.y2())):
+        check_point_belongs_to_line(line, some_point) and (
+            some_point.x() >= (
+                min(line.x1(), line.x2()) -
+                rounding_error)) and (
+            some_point.x() <= (
+                max(line.x1(), line.x2()) +
+                rounding_error)) and (
+            some_point.y() >= (
+                min(line.y1(), line.y2()) -
+                rounding_error)) and (
+            some_point.y() <= (
+                max(line.y1(), line.y2()) +
+                rounding_error))):
         return True
     else:
         return False
@@ -199,8 +216,12 @@ def check_equality_with_rounding(first, second):
     if (
         math.fabs(
             first - second) <= rounding_error):
+        # LOG.debug("%s equals to %s" % (
+            # first, second))
         return True
     else:
+        # LOG.debug("%s NOT equals to %s" % (
+            # first, second))
         return False
 
 

@@ -2,6 +2,9 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 import math
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
 # scene show us position of tank at (0, 0) point

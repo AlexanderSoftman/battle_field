@@ -62,7 +62,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
             self,
             30,
             10,
-            60,
+            30,
             180,
             2 * 6000,
             None)
