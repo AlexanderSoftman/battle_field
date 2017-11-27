@@ -1,6 +1,7 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 import logging
+import math
 
 from battle_field.common import functions
 
@@ -59,6 +60,7 @@ class LidarModel():
                     self.carrier_item))
             # print("memory = %s" % (self.memory,))
             self.carrier_item.scene().isw.show_lidar_info(
+                self.carrier_item,
                 self.memory,
                 - self.lidars_half_angle,
                 self.angle_step)
@@ -73,17 +75,18 @@ class LidarModel():
     # 1) scene_pos of LIDAR
     # 2) angle of LIDAR's axis on scene
     def scan_map(self, LIDAR_pos_global, LIDAR_angle_global):
+        LOG.debug("===================")
         # clean memory
         self.memory = []
         # find all items in vision
         items_in_vision = self.carrier_item.scene().collidingItems(
             self.scanning_shape)
-        LOG.debug("items in vision: %s" % (
-            items_in_vision,))
+        # LOG.debug("items in vision: %s" % (
+            # items_in_vision,))
         items_in_vision_filtered = self.filter_items_in_vision(
             items_in_vision)
-        LOG.debug("items in vision filtered: %s" % (
-            items_in_vision_filtered,))
+        # LOG.debug("items in vision filtered: %s" % (
+            # items_in_vision_filtered,))
         list_of_lines = []
         for item in items_in_vision_filtered:
             item_lines = functions.find_all_lines_in_my_sc(
@@ -91,6 +94,8 @@ class LidarModel():
             list_of_lines.extend(item_lines)
         line_angle = -self.lidars_half_angle
         for i in range(self.points_in_sector):
+            LOG.debug("angle: %s" % (
+                line_angle,))
             self.memory.append(
                 self.find_single_line_result(
                     line_angle,
@@ -112,9 +117,11 @@ class LidarModel():
             list_of_lines):
         lidar_line = QtCore.QLineF(
             QtCore.QPointF(0, 0),
-            QtCore.QPointF(100, 0))
-        lidar_line.setAngle(
-            angle_of_measure)
+            QtCore.QPointF(
+                1 * math.cos(
+                    angle_of_measure * math.pi / 180),
+                1 * math.sin(
+                    angle_of_measure * math.pi / 180)))
         points_with_distance = []
         # find all intersections of this line
         for line in list_of_lines:
@@ -136,10 +143,13 @@ class LidarModel():
                 if (
                     functions.check_line_contains_point(
                         line, point_of_intersection)):
-                    #LOG.debug(
-                        #"point: %s suc checked to contain %s" % (
-                            #point_of_intersection,
-                            #line))
+                    LOG.debug(
+                        "point in local, lidar: %s " % (
+                            point_of_intersection,))
+                    LOG.debug(
+                        "point in global, lidar: %s" % (
+                            self.carrier_item.mapToScene(
+                                point_of_intersection)))
                     points_with_distance.append(
                         (point_of_intersection,
                             QtCore.QLineF(
@@ -153,9 +163,9 @@ class LidarModel():
             points_with_distance = sorted(
                 points_with_distance,
                 key=lambda x: x[1])
-            # #LOG.debug(
-                # "choosed distance: %s" % (
-                    # points_with_distance[0][1],))
+            LOG.debug(
+                "choosed point: %s" % (
+                    points_with_distance[0][0],))
             return (points_with_distance[0][1], 1)
         else:
             return (None, 1)

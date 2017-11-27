@@ -251,16 +251,16 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.addItem(self.my_tank)
         Obstacle_1 = obstacle.Obstacle(
             self, QtCore.QPointF(100, 10), 0)
-        #Obstacle_2 = obstacle.Obstacle(
-            #self, QtCore.QPointF(330, -10), 0)
-        #Obstacle_3 = obstacle.Obstacle(
-            #self, QtCore.QPointF(330, -100), 0)
+        Obstacle_2 = obstacle.Obstacle(
+            self, QtCore.QPointF(330, -10), 0)
+        Obstacle_3 = obstacle.Obstacle(
+            self, QtCore.QPointF(330, -100), 0)
         self.addItem(Obstacle_1)
-        #self.addItem(Obstacle_2)
-        #self.addItem(Obstacle_3)
+        self.addItem(Obstacle_2)
+        self.addItem(Obstacle_3)
         Obstacle_1.setVisible(True)
-        #Obstacle_2.setVisible(True)
-        #Obstacle_3.setVisible(True)
+        Obstacle_2.setVisible(True)
+        Obstacle_3.setVisible(True)
         # self.enemy_tank = tank.Tank(
             # self, QtCore.QPointF(1, 1), 120, True)
         # self.addItem(self.enemy_tank)
