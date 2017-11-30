@@ -1,9 +1,11 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 
 from battle_field.items import tank
 from battle_field.items import obstacle
 from battle_field.items import path_creator
+from battle_field.items import four_wheels
 from PyQt5 import QtNetwork
 import json
 import logging
@@ -18,15 +20,19 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     safety_objects_distance = 100
 
     # define buttons
-
-    up = 16777235
-    down = 16777237
-    left = 16777234
-    right = 16777236
-    space = 32
-    cntrl = 16777249
-    alt = 16777251
-
+    buttons = {
+        'up': 16777235,
+        'down': 16777237,
+        'left': 16777234,
+        'right': 16777236,
+        'space': 32,
+        'cntrl': 16777249,
+        'alt': 16777251,
+        'w': 87,
+        'a': 65,
+        's': 83,
+        'd': 68
+    }
     tank_list = []
     # simple_tank_health = 100
 
@@ -226,29 +232,56 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
 
     def eventFilter(self, object, event):
         if event.type() == QtCore.QEvent.KeyPress:
-            if event.key() == self.left:
+            if event.key() == self.buttons["left"]:
                 self.my_tank.reduce_angle()
-            elif event.key() == self.right:
+            elif event.key() == self.buttons["right"]:
                 self.my_tank.increase_angle()
-            elif event.key() == self.up:
+            elif event.key() == self.buttons["up"]:
                 self.my_tank.increase_speed()
-            elif event.key() == self.down:
+            elif event.key() == self.buttons["down"]:
                 self.my_tank.reduce_speed()
-            elif event.key() == self.cntrl:
+            elif event.key() == self.buttons["cntrl"]:
                 self.my_tank.tower.reduce_rotation_speed()
-            elif event.key() == self.alt:
+            elif event.key() == self.buttons["alt"]:
                 self.my_tank.tower.increase_rotation_speed()
-            elif event.key() == self.space:
+            elif event.key() == self.buttons["space"]:
                 self.my_tank.tower.create_bullet()
-            # print(event.key())
+            elif event.key() == self.buttons["space"]:
+                self.my_tank.tower.create_bullet()
+            elif event.key() == self.buttons["w"]:
+                self.my_fourwheels.increase_wheels_speed()
+            elif event.key() == self.buttons["a"]:
+                self.my_fourwheels.reduce_wa()
+            elif event.key() == self.buttons["s"]:
+                self.my_fourwheels.reduce_wheels_speed()
+            elif event.key() == self.buttons["d"]:
+                self.my_fourwheels.increase_wa()
+            #print(event.key())
+
+
             return True
         else:
             return QtWidgets.QGraphicsScene.eventFilter(self, object, event)
 
     def create_test_scene(self):
-        self.my_tank = tank.Tank(
-            self, QtCore.QPointF(0, 0), 0, False)
-        self.addItem(self.my_tank)
+        #self.my_tank = tank.Tank(
+            #self, QtCore.QPointF(0, 0), 0, False)
+        #self.addItem(self.my_tank)
+        self.my_fourwheels = four_wheels.FourWheels(
+            self,
+            body_size={
+                "width": 100,
+                "height": 50
+            },
+            init_pos={
+                "position": QtCore.QPointF(0, 0),
+                "heading": -45
+            },
+            wheel_size={
+                "breadth": 10,
+                "diameter": 30
+            })
+        self.addItem(self.my_fourwheels)
         Obstacle_1 = obstacle.Obstacle(
             self, QtCore.QPointF(100, 10), 0)
         Obstacle_2 = obstacle.Obstacle(

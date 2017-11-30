@@ -84,7 +84,7 @@ class InfoSceneWrapper(QtWidgets.QGraphicsScene):
             # self.removeItem(measure)
         # self.lidar_ellipses[:] = []
         # position of carrier item in scene sc
-        LOG.debug("dots = %s" % (self.debug_only_count_of_true_dots,))
+        # LOG.debug("dots = %s" % (self.debug_only_count_of_true_dots,))
         # LOG.debug("len(wrapped_measures_list): %s" % (
             # len(wrapped_measures_list),))
         # LOG.debug("start_angle: %s, angle_step: %s" % (
@@ -110,8 +110,8 @@ class InfoSceneWrapper(QtWidgets.QGraphicsScene):
                 self.show_on_scene(measure_in_global)
             angle += angle_step
         elapsed_time = time.time() - start_time
-        LOG.debug("time for showing on scene: %s" % (
-            elapsed_time,))
+        # LOG.debug("time for showing on scene: %s" % (
+            # elapsed_time,))
 
     def show_on_scene(self, point):
         # find nearest block in memory:
@@ -124,7 +124,7 @@ class InfoSceneWrapper(QtWidgets.QGraphicsScene):
                 x % self.show_block_freq == 0 or
                     y % self.show_block_freq == 0):
                 return
-            LOG.debug("set visible")
+            # LOG.debug("set visible")
             self.blocks_memory[(x, y)].setVisible(True)
             self.debug_only_count_of_true_dots += 1
 
