@@ -4,6 +4,7 @@ import logging
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
+from PyQt5 import QtCore
 from battle_field import scene_wrapper
 from battle_field import info_scene_wrapper
 from PyQt5 import uic
@@ -20,7 +21,14 @@ class MainWindow(QtWidgets.QMainWindow):
             os.path.join(os.path.split(__file__)[0], "battle_field.ui"),
             self)
         # information_scene
-        isw = info_scene_wrapper.InfoSceneWrapper()
+        isw = info_scene_wrapper.InfoSceneWrapper(
+            block_side=3,
+            show_block_freq=3,
+            scene_rect=QtCore.QRectF(
+                -1000,
+                -1000,
+                2000,
+                2000))
         self.info_scene.setScene(isw)
         self.info_scene.installEventFilter(isw)
         self.info_scene.setRenderHints(
@@ -31,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
         self.info_scene.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         self.info_scene.setWindowTitle("Information")
-        self.info_scene.scale(2, 2)
+        self.info_scene.scale(4, 4)
 
         sw = scene_wrapper.SceneWrapper(isw)
         self.main_scene.setScene(sw)

@@ -4,6 +4,7 @@ import logging
 import math
 
 from battle_field.common import functions
+from battle_field.items import bullet
 
 LOG = logging.getLogger(__name__)
 
@@ -75,7 +76,6 @@ class LidarModel():
     # 1) scene_pos of LIDAR
     # 2) angle of LIDAR's axis on scene
     def scan_map(self, LIDAR_pos_global, LIDAR_angle_global):
-        LOG.debug("===================")
         # clean memory
         self.memory = []
         # find all items in vision
@@ -94,8 +94,8 @@ class LidarModel():
             list_of_lines.extend(item_lines)
         line_angle = -self.lidars_half_angle
         for i in range(self.points_in_sector):
-            LOG.debug("angle: %s" % (
-                line_angle,))
+            # LOG.debug("angle: %s" % (
+                # line_angle,))
             self.memory.append(
                 self.find_single_line_result(
                     line_angle,
@@ -143,13 +143,13 @@ class LidarModel():
                 if (
                     functions.check_line_contains_point(
                         line, point_of_intersection)):
-                    LOG.debug(
-                        "point in local, lidar: %s " % (
-                            point_of_intersection,))
-                    LOG.debug(
-                        "point in global, lidar: %s" % (
-                            self.carrier_item.mapToScene(
-                                point_of_intersection)))
+                    # LOG.debug(
+                        # "point in local, lidar: %s " % (
+                            # point_of_intersection,))
+                    # LOG.debug(
+                        # "point in global, lidar: %s" % (
+                            # self.carrier_item.mapToScene(
+                                # point_of_intersection)))
                     points_with_distance.append(
                         (point_of_intersection,
                             QtCore.QLineF(
@@ -163,9 +163,9 @@ class LidarModel():
             points_with_distance = sorted(
                 points_with_distance,
                 key=lambda x: x[1])
-            LOG.debug(
-                "choosed point: %s" % (
-                    points_with_distance[0][0],))
+            # LOG.debug(
+                # "choosed point: %s" % (
+                    # points_with_distance[0][0],))
             return (points_with_distance[0][1], 1)
         else:
             return (None, 1)
@@ -210,8 +210,13 @@ class LidarModel():
     # function filter items in vision
     # will be removed - all our parents and all childs of our parents
     def filter_items_in_vision(self, items_in_vision):
-        items_in_vision_filtered = list(items_in_vision)
-        # 1. find top parent of carrier_item
+        # 1. filter bullets and tanks
+        rude_filtered = []
+        for item in items_in_vision:
+            if not isinstance(item, bullet.Bullet):
+                rude_filtered.append(item)
+        items_in_vision_filtered = list(rude_filtered)
+        # 2. find top parent of carrier_item
         top_parent = self.carrier_item
         while top_parent.parentItem() is not None:
             top_parent = top_parent.parentItem()
