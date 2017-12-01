@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-from battle_field.items import lidar_model
+from battle_field.items.devices_models import lidar_model
 
 import os
 import battle_field

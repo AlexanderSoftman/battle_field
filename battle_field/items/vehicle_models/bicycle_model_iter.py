@@ -59,11 +59,6 @@ class VehicleModel():
 
     def update(self):
         dist = self.distance_per_update()
-        #distance_projections = {
-            #"to_heading": dist *
-            #math.cos(self.wa * math.pi / 180),
-            #"perpendicularly_heading": dist *
-            #math.sin(self.wa * math.pi / 180)}
         # LOG.debug("dist projections = %s" % (distance_projections,))
         # new front wheels position
         fw_pos_cur = QtCore.QPointF(
@@ -80,19 +75,6 @@ class VehicleModel():
         fw_pos_new = QtCore.QPointF(
             fw_pos_cur.x() + fw_pos_delta["x"],
             fw_pos_cur.y() + fw_pos_delta["y"])
-        #fw_pos = (
-            #self.bw_pos +
-            #QtCore.QPointF(
-                #self.axis_dist * math.cos(
-                    #self.heading * math.pi / 180),
-                #self.axis_dist * math.sin(
-                    #self.heading * math.pi / 180)) +
-            #QtCore.QPointF(
-                #distance_projections["to_heading"] * math.cos(
-                    #self.heading * math.pi / 180),
-                #distance_projections["perpendicularly_heading"] *
-                #math.sin(
-                    #self.heading * math.pi / 180)))
 
         # recalculated back point coordinates
         bw_dist = dist * math.cos(
@@ -103,11 +85,6 @@ class VehicleModel():
             self.bw_pos.y() + bw_dist * math.sin(
                 self.heading * math.pi / 180))
 
-        #self.bw_pos += QtCore.QPointF(
-            #distance_projections["to_heading"] *
-            #math.cos(self.heading * math.pi / 180),
-            #distance_projections["to_heading"] *
-            #math.sin(self.heading * math.pi / 180))
         self.bw_pos = bw_pos_new
         # recalculate heading
         LOG.debug("heading old = %s" % (self.heading,))
@@ -125,7 +102,6 @@ class VehicleModel():
     def get_model_parameters(self):
         return {
             "bw_pos": self.bw_pos,
-            "fw_pos": self.fw_pos,
             "heading": self.heading,
             "wa": self.wa
         }

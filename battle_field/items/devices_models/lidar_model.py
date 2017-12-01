@@ -4,7 +4,7 @@ import logging
 import math
 
 from battle_field.common import functions
-from battle_field.items import bullet
+from battle_field.items.vehicles.tank import bullet
 
 LOG = logging.getLogger(__name__)
 

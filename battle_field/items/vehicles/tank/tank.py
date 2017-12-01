@@ -3,7 +3,7 @@ import os
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from battle_field.items import tower
+from battle_field.items.vehicles.tank import tower
 from battle_field.items import obstacle
 from battle_field.common import functions
 import battle_field

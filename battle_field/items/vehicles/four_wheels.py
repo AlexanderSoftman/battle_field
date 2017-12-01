@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from battle_field.items import bicycle_model_iter
+from battle_field.items.vehicle_models import bicycle_model_iter
+from battle_field.items.vehicle_models import bicycle_model
 import logging
 
 
@@ -11,7 +12,7 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
     wa_max = 35
     wa_change = 1
     wheel_rad = 2
-
+    rotation_line = None
     # input values:
     # 1) scene
     # 2) body size = {
@@ -33,35 +34,16 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
 
         super(FourWheels, self).__init__()
 
-        self.model = bicycle_model_iter.VehicleModel(
+        self.model = bicycle_model.VehicleModel(
             axis_dist=body_size["width"],
             wa_max=self.wa_max,
             wa_change=1,
             wheel_rad=wheel_size["diameter"] / 2,
             update_freq=30,
             bw_pos=init_pos["position"],
-            heading=init_pos["heading"])
-
-        self.center = QtWidgets.QGraphicsEllipseItem(
-            0 - 2.5,
-            0 - 2.5,
-            5,
-            5,
-            self)
-
-        self.x = QtWidgets.QGraphicsEllipseItem(
-            10 - 2.5,
-            0 - 2.5,
-            5,
-            5,
-            self)
-
-        self.y = QtWidgets.QGraphicsEllipseItem(
-            0 - 2.5,
-            20 - 2.5,
-            5,
-            5,
-            self)
+            heading=init_pos["heading"],
+            wa_start=0,
+            ws_start=0)
 
         # 1. body
         self.body = QtWidgets.QGraphicsRectItem(
@@ -134,3 +116,24 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
         self.setRotation(model_pars["heading"])
         self.front_wheel_left.setRotation(model_pars["wa"])
         self.front_wheel_right.setRotation(model_pars["wa"])
+        # remove old line
+        if self.rotation_line is not None:
+            self.scene().removeItem(
+                self.rotation_line)
+            self.rotation_line = None
+        if "radius" in model_pars:
+            sign = 0
+            if model_pars["wa"] > 0:
+                sign = 1
+            else:
+                sign = -1
+            if model_pars["radius"] is not None:
+                line_angle = model_pars["heading"] + sign * 90
+                line = QtCore.QLineF(
+                    model_pars["bw_pos"].x(),
+                    model_pars["bw_pos"].y(),
+                    model_pars["bw_pos"].x() + model_pars["radius"],
+                    model_pars["bw_pos"].y())
+                line.setAngle(-line_angle)
+                self.rotation_line = self.scene().addLine(
+                    line)

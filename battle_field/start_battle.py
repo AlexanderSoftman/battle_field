@@ -20,6 +20,12 @@ class MainWindow(QtWidgets.QMainWindow):
         uic.loadUi(
             os.path.join(os.path.split(__file__)[0], "battle_field.ui"),
             self)
+        self.setWindowTitle("BATTLE_FIELD")
+        self.setWindowIcon(
+            QtGui.QIcon(
+                os.path.join(
+                    os.path.split(
+                        __file__)[0], 'icon.png')))
         # information_scene
         isw = info_scene_wrapper.InfoSceneWrapper(
             block_side=3,

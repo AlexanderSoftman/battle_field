@@ -3,11 +3,11 @@ import math
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-from battle_field.items import bullet
-from battle_field.items import tank
+from battle_field.items.vehicles.tank import bullet
+from battle_field.items.vehicles.tank import tank
 from battle_field.common import functions
 from battle_field.items import obstacle
-from battle_field.items import lidar
+from battle_field.items.devices_models import lidar
 
 import battle_field
 
