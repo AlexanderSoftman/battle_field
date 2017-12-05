@@ -1,8 +1,9 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from battle_field.items.vehicle_models import bicycle_model_iter
 from battle_field.items.vehicle_models import bicycle_model
-import logging
 
+import logging
+import math
 
 LOG = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
     wa_change = 1
     wheel_rad = 2
     rotation_line = None
+    axis_dist = 0
     # input values:
     # 1) scene
     # 2) body size = {
@@ -44,6 +46,8 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
             heading=init_pos["heading"],
             wa_start=0,
             ws_start=0)
+
+        self.axis_dist = body_size["width"]
 
         # 1. body
         self.body = QtWidgets.QGraphicsRectItem(
@@ -111,7 +115,12 @@ class FourWheels(QtWidgets.QGraphicsItemGroup):
         self.model.update()
         model_pars = self.model.get_model_parameters()
         LOG.debug("model_pars = %s" % (model_pars,))
-        self.setPos(model_pars["bw_pos"])
+        self.setPos(
+            QtCore.QPointF(
+                model_pars["bw_pos"].x() + self.axis_dist / 2 * math.cos(
+                    model_pars["heading"] * math.pi / 180),
+                model_pars["bw_pos"].y() + self.axis_dist / 2 * math.sin(
+                    model_pars["heading"] * math.pi / 180)))
         # LOG.debug("pos = %s" % (self.pos(),))
         self.setRotation(model_pars["heading"])
         self.front_wheel_left.setRotation(model_pars["wa"])

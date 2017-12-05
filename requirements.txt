@@ -1,3 +1,4 @@
 PyQt5==5.9
 sip==4.19.3
 readchar==0.7
+numpy==1.13.3

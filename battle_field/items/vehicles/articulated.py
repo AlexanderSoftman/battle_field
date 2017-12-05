@@ -154,7 +154,8 @@ class Articulated(QtWidgets.QGraphicsItemGroup):
         self.front_angle = self.front_angle_init
         self.front.setRotation(self.front_angle)
 
-        # 13. initial heading
+        # 13. initial heading and pos
+        self.setPos(init_pos["position"])
         self.setRotation(init_pos["heading"])
 
         # 14. rotation line

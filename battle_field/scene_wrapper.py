@@ -11,6 +11,7 @@ from battle_field.common import path_creator
 from battle_field.items.vehicles.tank import tank
 from battle_field.items.vehicles import four_wheels
 from battle_field.items.vehicles import articulated
+from battle_field.items.vehicles import cart
 
 
 LOG = logging.getLogger(__name__)
@@ -20,19 +21,21 @@ class User(enum.Enum):
     TANK = 1
     FRONT_DRIVING_FOUR_WHEELS = 2
     ARTICULATED_FOUR_WHEELS = 3
+    CART = 4
 
 
 class SceneWrapper(QtWidgets.QGraphicsScene):
-
-    tank_bots_count_maximum = 2
-    obstackles_count_maximum = 10
-    safety_objects_distance = 100
 
     # choose one of this guys
     # TANK
     # FRONT_DRIVING_FOUR_WHEELS
     # ARTICULATED_FOUR_WHEELS
-    user = User.ARTICULATED_FOUR_WHEELS
+    # CART
+    user = User.CART
+
+    tank_bots_count_maximum = 2
+    obstackles_count_maximum = 10
+    safety_objects_distance = 100
 
     # define buttons
     buttons = {
@@ -43,7 +46,9 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         'space': 32,
         'cntrl': 16777249,
         'alt': 16777251,
+        'q': 81,
         'w': 87,
+        'e': 69,
         'a': 65,
         's': 83,
         'd': 68
@@ -69,6 +74,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         self.time = QtCore.QTime()
         self.time.start()
         self.create_user()
+        self.test()
         # self.create_field()
         # self.create_enemies()
         # self.init_server()
@@ -252,13 +258,24 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             elif event.key() == self.buttons["space"]:
                 if isinstance(self.my_vehicle, tank.Tank):
                     self.my_vehicle.tower.create_bullet()
+            elif event.key() == self.buttons["q"]:
+                if isinstance(self.my_vehicle, cart.Cart):
+                    self.my_vehicle.increase_left_ws()
+            elif event.key() == self.buttons["a"]:
+                if isinstance(self.my_vehicle, cart.Cart):
+                    self.my_vehicle.reduce_left_ws()
+            elif event.key() == self.buttons["e"]:
+                if isinstance(self.my_vehicle, cart.Cart):
+                    self.my_vehicle.increase_right_ws()
+            elif event.key() == self.buttons["d"]:
+                if isinstance(self.my_vehicle, cart.Cart):
+                    self.my_vehicle.reduce_right_ws()
             # LOG.debug("pressed button: %s" % (event.key(), ))
             return True
         else:
             return QtWidgets.QGraphicsScene.eventFilter(self, object, event)
 
     def create_user(self):
-        LOG.debug("self.user = %s" % (self.user,))
         if self.user == User.ARTICULATED_FOUR_WHEELS:
             self.my_vehicle = articulated.Articulated(
                 scene=self,
@@ -289,7 +306,29 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         elif self.user == User.TANK:
             self.my_vehicle = tank.Tank(
                 self, QtCore.QPointF(0, 0), 0, False)
+        elif self.user == User.CART:
+            self.my_vehicle = cart.Cart(
+                self,
+                body_size={
+                    "width": 100,
+                    "height": 50
+                },
+                init_pos={
+                    "position": QtCore.QPointF(100, 100),
+                    "heading": 0
+                },
+                wheel_size={
+                    "breadth": 5,
+                    "diameter": 20
+                })
         self.addItem(self.my_vehicle)
+        # debug only center
+        self.center = QtWidgets.QGraphicsEllipseItem(
+            -2.5,
+            -2.5,
+            5,
+            5)
+        self.addItem(self.center)
 
     def create_field(self):
         # simple field
@@ -348,3 +387,11 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             if (permission_flag is True):
                 self.addItem(self.tank_list[-1])
                 tanks_count_current += 1
+
+    def test(self):
+        point_of_articulation = QtWidgets.QGraphicsEllipseItem(
+            0 - 2.5,
+            0 - 2.5,
+            5,
+            5)
+        self.addItem(point_of_articulation)
