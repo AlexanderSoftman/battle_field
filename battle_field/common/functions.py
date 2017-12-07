@@ -181,7 +181,7 @@ def find_all_lines_in_my_sc(item, me):
                     - item.boundingRect().height() / 2))))
 
     # for part in parts_of_item:
-    # print("part len = " + str(part.length()))
+    # print("parts_of_item = %s" % (parts_of_item, ))
     return parts_of_item
 
 

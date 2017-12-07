@@ -33,6 +33,8 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     # CART
     user = User.CART
 
+    update_freq = 30.0
+
     tank_bots_count_maximum = 2
     obstackles_count_maximum = 10
     safety_objects_distance = 100
@@ -62,20 +64,17 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         QtWidgets.QGraphicsScene.__init__(self, *xxx, **kwargs)
         self.isw = isw
         self.setSceneRect(-1000, -1000, 2000, 2000)
-        # small test scene
-        # self.setSceneRect(-500, -500, 1000, 1000)
         self.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
         self.path_creator = path_creator.PathCreator(self, [obstacle.Obstacle])
         # create timer
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.timerEvent)
-        self.dt = 1.0 / 30.0
+        self.dt = 1.0 / self.update_freq
         self.timer.start(self.dt * 1000)
         self.time = QtCore.QTime()
         self.time.start()
         self.create_user()
-        self.test()
-        # self.create_field()
+        self.create_field()
         # self.create_enemies()
         # self.init_server()
 
@@ -194,6 +193,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     def timerEvent(self):
         for item in self.items():
             item.update()
+        self.isw.update()
         if len(self.items()) < self.tank_bots_count_maximum:
             pos_x = -1000 + QtCore.qrand() % 2000
             pos_y = -1000 + QtCore.qrand() % 2000
@@ -307,37 +307,46 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             self.my_vehicle = tank.Tank(
                 self, QtCore.QPointF(0, 0), 0, False)
         elif self.user == User.CART:
+            body_size = {
+                "x": 100,
+                "y": 50
+            }
+            wheel_size = {
+                "breadth": 5,
+                "diameter": 20
+            }
+            init_pos = {
+                "position": QtCore.QPointF(0, 0),
+                "heading": 0
+            }
             self.my_vehicle = cart.Cart(
                 self,
-                body_size={
-                    "width": 100,
-                    "height": 50
-                },
-                init_pos={
-                    "position": QtCore.QPointF(100, 100),
-                    "heading": 0
-                },
-                wheel_size={
-                    "breadth": 5,
-                    "diameter": 20
-                })
+                self.update_freq,
+                self.isw.callbacks,
+                False,
+                body_size=body_size,
+                init_pos=init_pos,
+                wheel_size=wheel_size)
+            # create duplication on isw
+            self.isw.vehicle = cart.Cart(
+                self.isw,
+                self.update_freq,
+                None,
+                False,
+                body_size=body_size,
+                init_pos=init_pos,
+                wheel_size=wheel_size)
+            self.isw.addItem(self.isw.vehicle)
         self.addItem(self.my_vehicle)
-        # debug only center
-        self.center = QtWidgets.QGraphicsEllipseItem(
-            -2.5,
-            -2.5,
-            5,
-            5)
-        self.addItem(self.center)
 
     def create_field(self):
         # simple field
         Obstacle_1 = obstacle.Obstacle(
-            self, QtCore.QPointF(100, 10), 0)
+            self, QtCore.QPointF(500, 0), 0)
         Obstacle_2 = obstacle.Obstacle(
-            self, QtCore.QPointF(330, -10), 0)
+            self, QtCore.QPointF(300, 100), 0)
         Obstacle_3 = obstacle.Obstacle(
-            self, QtCore.QPointF(330, -100), 0)
+            self, QtCore.QPointF(300, -100), 0)
         self.addItem(Obstacle_1)
         self.addItem(Obstacle_2)
         self.addItem(Obstacle_3)
@@ -387,11 +396,3 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             if (permission_flag is True):
                 self.addItem(self.tank_list[-1])
                 tanks_count_current += 1
-
-    def test(self):
-        point_of_articulation = QtWidgets.QGraphicsEllipseItem(
-            0 - 2.5,
-            0 - 2.5,
-            5,
-            5)
-        self.addItem(point_of_articulation)

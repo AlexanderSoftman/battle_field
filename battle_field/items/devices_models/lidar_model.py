@@ -16,6 +16,8 @@ LOG = logging.getLogger(__name__)
 # which is list of tuples [(QPointF coordinate, trust_value 0..1), ...]
 class LidarModel():
 
+    callback = None
+
     # input values:
     # 1) timer_update_freq, Hz - frequency of call update
     # 2) sensor_update_freq, Hz - frequency of creating
@@ -32,13 +34,14 @@ class LidarModel():
         sensor_update_freq,
         scan_sector,
         points_in_sector,
+        callback,
         lidar_maximum_distance,
         carrier_item,
             error_model):
         self.timer_updates_per_scan_update = int(
             timer_update_freq /
             sensor_update_freq)
-        self.counter = 0
+        self.counter = 1
         self.lidars_half_angle = scan_sector / 2
         self.points_in_sector = points_in_sector
         self.lidar_maximum_distance = lidar_maximum_distance
@@ -49,29 +52,30 @@ class LidarModel():
         self.memory = []
         # scanning shape - ellipse
         self.build_sector_of_scanning()
+        self.callback = callback
 
     # we can scan map or not
     def update(self):
         if (self.counter ==
                 self.timer_updates_per_scan_update):
-            self.counter = 0
+            self.counter = 1
             self.scan_map(
                 self.carrier_item.scenePos(),
                 self.find_carrier_angle(
                     self.carrier_item))
-            # print("memory = %s" % (self.memory,))
-            self.carrier_item.scene().isw.show_lidar_info(
-                self.carrier_item,
-                self.memory,
-                - self.lidars_half_angle,
-                self.angle_step)
+            if self.callback:
+                self.callback(
+                    self.carrier_item,
+                    self.memory,
+                    - self.lidars_half_angle,
+                    self.angle_step)
         else:
             self.counter += 1
 
     # make map scanning from current scene_pos and
     # according to axis_angle
     # return:
-    # list of values [(QPointF, measure_of_trust 0..1), (), ()]
+    # list of values [(distance, measure_of_trust 0..1), (), ()]
     # input values:
     # 1) scene_pos of LIDAR
     # 2) angle of LIDAR's axis on scene
@@ -81,28 +85,22 @@ class LidarModel():
         # find all items in vision
         items_in_vision = self.carrier_item.scene().collidingItems(
             self.scanning_shape)
-        # LOG.debug("items in vision: %s" % (
-            # items_in_vision,))
         items_in_vision_filtered = self.filter_items_in_vision(
             items_in_vision)
-        # LOG.debug("items in vision filtered: %s" % (
-            # items_in_vision_filtered,))
         list_of_lines = []
         for item in items_in_vision_filtered:
             item_lines = functions.find_all_lines_in_my_sc(
                 item, self.carrier_item)
+            # LOG.debug("lines = %s" % (item_lines,))
             list_of_lines.extend(item_lines)
         line_angle = -self.lidars_half_angle
         for i in range(self.points_in_sector):
-            # LOG.debug("angle: %s" % (
-                # line_angle,))
-            self.memory.append(
-                self.find_single_line_result(
-                    line_angle,
-                    list_of_lines))
+            global_result = self.find_single_line_result(
+                line_angle,
+                list_of_lines)
+            # LOG.debug("global_result = %s" % (global_result,))
+            self.memory.append(global_result)
             line_angle += self.angle_step
-        # print(self.memory)
-
 
     # find intersection of single_line and first object on
     # single_lines way
@@ -117,59 +115,46 @@ class LidarModel():
             list_of_lines):
         lidar_line = QtCore.QLineF(
             QtCore.QPointF(0, 0),
-            QtCore.QPointF(
-                1 * math.cos(
-                    angle_of_measure * math.pi / 180),
-                1 * math.sin(
-                    angle_of_measure * math.pi / 180)))
+            QtCore.QPointF(1, 0))
+        lidar_line.setAngle(angle_of_measure)
         points_with_distance = []
         # find all intersections of this line
         for line in list_of_lines:
             point_of_intersection = QtCore.QPointF()
             intersection_type = lidar_line.intersect(
                 line, point_of_intersection)
-            #LOG.debug(
-                #"point: %s checking with %s" % (
-                    #point_of_intersection,
-                    #line))
             if ((QtCore.QLineF.BoundedIntersection ==
                     intersection_type) or
                     (QtCore.QLineF.UnboundedIntersection ==
                         intersection_type)):
-                #LOG.debug(
-                    #"point: %s suc checked to type %s" % (
-                        #point_of_intersection,
-                        #line))
                 if (
                     functions.check_line_contains_point(
                         line, point_of_intersection)):
+                    # go to global system coordinate
+                    point_of_intersection_global = (
+                        self.carrier_item.mapToScene(
+                            point_of_intersection))
                     # LOG.debug(
-                        # "point in local, lidar: %s " % (
-                            # point_of_intersection,))
-                    # LOG.debug(
-                        # "point in global, lidar: %s" % (
-                            # self.carrier_item.mapToScene(
-                                # point_of_intersection)))
+                        # "point_of_intersection_global: %s" % (
+                            # point_of_intersection_global,))
                     points_with_distance.append(
-                        (point_of_intersection,
+                        (point_of_intersection_global,
                             QtCore.QLineF(
-                                QtCore.QPointF(0, 0),
-                                point_of_intersection).length()))
+                                self.carrier_item.mapToScene(
+                                    QtCore.QPointF(0, 0)),
+                                point_of_intersection_global).length()))
+                    # LOG.debug(
+                        # "points with dists: %s" % (
+                            # points_with_distance[-1],))
         # sort our results
-        #LOG.debug(
-            #"len(points_with_distance): %s" % (
-                #len(points_with_distance),))
         if len(points_with_distance) != 0:
             points_with_distance = sorted(
                 points_with_distance,
                 key=lambda x: x[1])
-            # LOG.debug(
-                # "choosed point: %s" % (
-                    # points_with_distance[0][0],))
+            # LOG.debug("hack = %s" % (points_with_distance[0][0],))
             return (points_with_distance[0][1], 1)
         else:
             return (None, 1)
-
 
     # untested
     # find all parents of QGraphicsItem obj and find
@@ -181,15 +166,11 @@ class LidarModel():
     # 1) angle on scene of X axis in degrees
     def find_carrier_angle(self, carrier):
         angle = carrier.rotation()
-        # print("angle = %s" % (angle, ))
         carrier_of_carrier = carrier.parentItem()
-        # print("carrier_of_carrier = %s" % (carrier_of_carrier, ))
         while carrier_of_carrier is not None:
-            # print("new iteration")
             angle += carrier_of_carrier.rotation()
             angle = angle % 360
             carrier_of_carrier = carrier_of_carrier.parentItem()
-            # print("carrier_of_carrier = %s" % (carrier_of_carrier, ))
         return angle
 
     # untested
@@ -197,10 +178,10 @@ class LidarModel():
     # return: QGraphicsEllipseItem
     def build_sector_of_scanning(self):
         self.scanning_shape = QtWidgets.QGraphicsEllipseItem(
-            - self.lidar_maximum_distance / 2,
-            - self.lidar_maximum_distance / 2,
-            self.lidar_maximum_distance,
-            self.lidar_maximum_distance,
+            - self.lidar_maximum_distance,
+            - self.lidar_maximum_distance,
+            2 * self.lidar_maximum_distance,
+            2 * self.lidar_maximum_distance,
             self.carrier_item)
         self.scanning_shape.setStartAngle(
             - self.lidars_half_angle * 16)

@@ -6,8 +6,11 @@ LOG = logging.getLogger(__name__)
 
 
 class CartModel():
-    left_rotation_speed = 0
-    right_rotation_speed = 0
+    left_rotation_ps = 0
+    right_rotation_ps = 0
+    left_linear_pu = 0
+    right_linear_pu = 0
+
     radius_point = None
     delta_radius = 0
 
@@ -31,21 +34,28 @@ class CartModel():
         self.back_wheel_angle = self.heading
 
     def increase_left_ws(self):
-        self.left_rotation_speed += self.ws_change
+        self.left_rotation_ps += self.ws_change
+        self.left_linear_pu = self.wheel_rad * (
+            self.left_rotation_ps /
+            self.update_freq)
 
     def reduce_left_ws(self):
-        self.left_rotation_speed -= self.ws_change
+        self.left_rotation_ps -= self.ws_change
+        self.left_linear_pu = self.wheel_rad * (
+            self.left_rotation_ps /
+            self.update_freq)
 
     def increase_right_ws(self):
-        self.right_rotation_speed += self.ws_change
+        self.right_rotation_ps += self.ws_change
+        self.right_linear_pu = self.wheel_rad * (
+            self.right_rotation_ps /
+            self.update_freq)
 
     def reduce_right_ws(self):
-        self.right_rotation_speed -= self.ws_change
-
-    def speed_per_update(self, ws):
-        speed = self.wheel_rad * (
-            ws / self.update_freq)
-        return speed
+        self.right_rotation_ps -= self.ws_change
+        self.right_linear_pu = self.wheel_rad * (
+            self.right_rotation_ps /
+            self.update_freq)
 
     def get_model_parameters(self):
         return {
@@ -58,39 +68,38 @@ class CartModel():
     def update(self):
         # 1 case speeds == 0
         if (
-            self.left_rotation_speed == 0 and
-                self.right_rotation_speed == 0):
+            self.left_linear_pu == 0 and
+                self.right_linear_pu == 0):
             self.delta_radius = float('Inf')
             self.radius = None
-            angle_speed = 0
+            angle_speed_degrees = 0
             return
         # find speeds diff
-        speed_diff = self.speed_per_update(
-            self.left_rotation_speed -
-            self.right_rotation_speed)
+        speed_diff = (
+            self.left_linear_pu -
+            self.right_linear_pu)
         # case 2 - speed diff = 0
         if speed_diff == 0:
             self.delta_radius = float('Inf')
             self.radius_point = None
-            angle_speed = 0
+            angle_speed_degrees = 0
             self.fw_pos = QtCore.QPointF(
                 self.fw_pos.x() +
-                self.speed_per_update(self.left_rotation_speed) *
+                self.left_linear_pu *
                 math.cos(
                     math.radians(
                         self.heading)),
                 self.fw_pos.y() -
-                self.speed_per_update(self.right_rotation_speed) *
+                self.right_linear_pu *
                 math.sin(
                     math.radians(
                         self.heading)))
             return
         # case 3 speed diff != 0
         # delta radius count from left wheel:
-        if self.left_rotation_speed != 0:
+        if self.left_linear_pu != 0:
             self.delta_radius = int(
-                self.speed_per_update(
-                    self.left_rotation_speed) *
+                self.left_linear_pu *
                 self.body_y /
                 speed_diff)
         else:
@@ -112,26 +121,25 @@ class CartModel():
                 self.heading)))
         # angle speeds
         if self.delta_radius == self.body_y:
-            angle_speed = (
-                self.left_rotation_speed *
-                self.update_freq /
+            angle_speed_degrees = (180 / math.pi) * (
+                self.left_linear_pu /
                 self.delta_radius)
         elif self.delta_radius == 0:
-            angle_speed = - (
-                self.right_rotation_speed *
-                self.update_freq /
+            angle_speed_degrees = (180 / math.pi) * (
+                self.right_linear_pu /
                 self.body_y)
+            # invert sign
+            angle_speed_degrees = -angle_speed_degrees
         else:
-            angle_speed = (
-                self.left_rotation_speed *
-                self.update_freq /
+            angle_speed_degrees = (180 / math.pi) * (
+                self.left_linear_pu /
                 self.delta_radius)
         # move heading:
-        self.heading -= angle_speed
+        self.heading -= angle_speed_degrees
         # move fw_pos
         line = QtCore.QLineF(
             self.radius_point,
             self.fw_pos)
         line.setAngle(
-            line.angle() - angle_speed)
+            line.angle() - angle_speed_degrees)
         self.fw_pos = line.p2()

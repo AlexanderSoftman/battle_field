@@ -45,7 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QGraphicsView.BoundingRectViewportUpdate)
         self.info_scene.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         self.info_scene.setWindowTitle("Information")
-        self.info_scene.scale(4, 4)
+        # self.info_scene.scale(4, 4)
 
         sw = scene_wrapper.SceneWrapper(isw)
         self.main_scene.setScene(sw)
