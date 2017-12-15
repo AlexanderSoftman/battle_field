@@ -31,7 +31,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     # FRONT_DRIVING_FOUR_WHEELS
     # ARTICULATED_FOUR_WHEELS
     # CART
-    user = User.CART
+    user = User.TANK
 
     update_freq = 30.0
 
@@ -354,7 +354,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         Obstacle_2.setVisible(True)
         Obstacle_3.setVisible(True)
 
-        return
+        # return
         # create obstacle.Obstacles
         for i in range(self.obstackles_count_maximum):
             pos_x = -1000 + QtCore.qrand() % 2000

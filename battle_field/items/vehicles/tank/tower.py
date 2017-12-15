@@ -18,7 +18,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
 
     def __init__(self, scene, parent, bot_flag=True):
         super(Tower, self).__init__(parent)
-        self.scene = scene
+        self.m_scene = scene
         self.parent = parent
         self.rotation_speed_maximum = 5
         self.rotation_speed = 0
@@ -88,16 +88,16 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
 
     #   interface
     def create_bullet(self):
-        if self.scene.time.elapsed() - self.last_shoot_time > \
+        if self.m_scene.time.elapsed() - self.last_shoot_time > \
                 self.shoot_period:
             Bullet_x = self.boundingRect().width()
             Bullet_y = 0
-            self.scene.addItem(bullet.Bullet(
-                self.scene,
+            self.m_scene.addItem(bullet.Bullet(
+                self.m_scene,
                 self.mapToScene(QtCore.QPointF(Bullet_x, Bullet_y)),
                 self.parentItem().rotation() + self.rotation(),
                 self.parentItem().speed))
-            self.last_shoot_time = self.scene.time.elapsed()
+            self.last_shoot_time = self.m_scene.time.elapsed()
 
     # internal for tower, called by timer
     def update(self):
@@ -119,7 +119,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
             shadow.setParentItem(None)
         del self.shadow_shape_list[:]
         # 1. find all colliding with vision items
-        items_in_vision_before_filtering = self.scene.collidingItems(
+        items_in_vision_before_filtering = self.m_scene.collidingItems(
             self.vision)
         items_in_vision = []
         for item in items_in_vision_before_filtering:
@@ -236,9 +236,9 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
     # internal for tower, bot only
     def enemy(self):
         # 1. search targets
-        all_items_partly_in_vision_list = self.scene.collidingItems(
+        all_items_partly_in_vision_list = self.m_scene.collidingItems(
             self.vision, QtCore.Qt.IntersectsItemBoundingRect)
-        # all_items_fully_in_vision_list = self.scene.collidingItems(
+        # all_items_fully_in_vision_list = self.m_scene.collidingItems(
             # self.vision, QtCore.Qt.ContainsItemBoundingRect)
         targets_partly_in_vision_list = []
         # targets_fully_in_vision_list = []
@@ -257,9 +257,9 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
         # in at least one of shapes
         for target in targets_partly_in_vision_list:
             for shadow in self.shadow_shape_list:
-                # items_fully_inside_shadow = self.scene.collidingItems(
+                # items_fully_inside_shadow = self.m_scene.collidingItems(
                     # shadow, QtCore.Qt.ContainsItemBoundingRect)
-                items_partly_inside_shadow = self.scene.collidingItems(
+                items_partly_inside_shadow = self.m_scene.collidingItems(
                     shadow, QtCore.Qt.IntersectsItemBoundingRect)
                 targets_partly_inside_shadow = []
                 for item in items_partly_inside_shadow:
@@ -322,9 +322,9 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
     # internal for tower, bot only
     def start_scanning(self):
         # find new destination angle
-        if self.scene.time.elapsed() - self.last_angle_time > \
+        if self.m_scene.time.elapsed() - self.last_angle_time > \
                 self.rotation():
-            self.last_angle_time = self.scene.time.elapsed()
+            self.last_angle_time = self.m_scene.time.elapsed()
             self.angle_period = -45 + (QtCore.qrand() % 90)
 
     # internal for tower, bot only
@@ -336,7 +336,7 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
                 sign = -1
             self.setRotation(
                 self.rotation() +
-                sign * self.rotation_speed_maximum * self.scene.dt
+                sign * self.rotation_speed_maximum * self.m_scene.dt
             )
 
     # internal for tower, bot only
@@ -348,5 +348,5 @@ class Tower(QtWidgets.QGraphicsPixmapItem):
     def rotate_tower(self):
         self.setRotation(
             self.rotation() +
-            self.rotation_speed * self.scene.dt
+            self.rotation_speed * self.m_scene.dt
         )

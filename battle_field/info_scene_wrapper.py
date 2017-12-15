@@ -43,7 +43,6 @@ class InfoSceneWrapper(QtWidgets.QGraphicsScene):
                 self.right_odometer_callback,
             "lidar":
                 self.lidar_callback
-
         }
         self.setSceneRect(scene_rect)
         self.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
