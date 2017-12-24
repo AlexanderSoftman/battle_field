@@ -50,6 +50,6 @@ class Lidar(QtWidgets.QGraphicsPixmapItem):
         self.parent = parent
 
     def update(self):
-        LOG.debug("carrier_pos = %s" % (self.parent.pos(),))
-        LOG.debug("carrier_heading = %s" % (-self.parent.rotation(),))
+        # LOG.debug("carrier_pos = %s" % (self.parent.pos(),))
+        # LOG.debug("carrier_heading = %s" % (-self.parent.rotation(),))
         self.lidar_model.update()

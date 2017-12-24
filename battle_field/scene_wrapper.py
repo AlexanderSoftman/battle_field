@@ -305,7 +305,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
                 })
         elif self.user == User.TANK:
             self.my_vehicle = tank.Tank(
-                self, QtCore.QPointF(0, 0), 0, False)
+                self, QtCore.QPointF(-100, 0), 0, False)
         elif self.user == User.CART:
             body_size = {
                 "x": 100,
@@ -342,7 +342,7 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     def create_field(self):
         # simple field
         Obstacle_1 = obstacle.Obstacle(
-            self, QtCore.QPointF(500, 0), 0)
+            self, QtCore.QPointF(0, 0), 0)
         Obstacle_2 = obstacle.Obstacle(
             self, QtCore.QPointF(300, 100), 0)
         Obstacle_3 = obstacle.Obstacle(

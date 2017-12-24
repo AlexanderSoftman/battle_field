@@ -6,7 +6,7 @@ from PyQt5 import QtGui
 from battle_field.items.vehicles.tank import tower
 from battle_field.items import obstacle
 from battle_field.common import functions
-from battle_field.common.bump_checker import bump_checker
+from battle_field.common.bump_checker import bump_checker_new
 import battle_field
 
 
@@ -20,7 +20,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
             QtCore.QRectF(0, 0, 10, 10), self)
         # delete counter after debug!!!
         self.built_li_shapes_list = []
-        self.BumpChecker = bump_checker.BumpChecker()
+        self.BumpChecker = bump_checker_new.BumpCheckerNew()
         # path brush
         self.setPos(pos)
         self.setRotation(angle)
@@ -39,6 +39,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         self.path_positions_list = []
         # self.health = health
         # create special colour poligonf around our tank
+        return
         if self.bot_flag is False:
             print()
             self.colour_bound = QtGui.QPolygonF([
@@ -90,7 +91,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         # print("pos = %s" % (self.pos(),))
         self.change_pos()
         self.setPos(
-            self.BumpChecker.bump_check(self))
+            self.BumpChecker.bump_reaction(self))
         # move to tank level
         # if self.bot_flag:
             #if len(self.path_positions_list) == 0:

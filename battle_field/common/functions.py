@@ -24,21 +24,15 @@ def check_point_belongs_to_line(line, some_point):
             return False
     else:
         if (check_equality_with_rounding(
-                line.x1(), some_point.x()) and
-            some_point.y() >= min(
-                line.y1(),
-                line.y2() - rounding_error) and
-            some_point.y() <= max(
-                line.y1(),
-                line.y2()) + rounding_error):
-            # LOG.debug(
-                # "point %s belongs to line: %s" % (
-                    # some_point, line))
+                line.x1(), some_point.x()) and (
+                some_point.y() >= min(
+                    line.y1(),
+                    line.y2()) - rounding_error) and (
+                some_point.y() <= max(
+                    line.y1(),
+                    line.y2()) + rounding_error)):
             return True
         else:
-            # LOG.debug(
-                # "point %s NOT belongs to line: %s" % (
-                    # some_point, line))
             return False
 
 
@@ -216,12 +210,8 @@ def check_equality_with_rounding(first, second):
     if (
         math.fabs(
             first - second) <= rounding_error):
-        # LOG.debug("%s equals to %s" % (
-            # first, second))
         return True
     else:
-        # LOG.debug("%s NOT equals to %s" % (
-            # first, second))
         return False
 
 
