@@ -1,8 +1,11 @@
 import math
+import logging
 
 from PyQt5.QtCore import QLineF, QPointF
 from PyQt5.QtGui import QPolygonF
 rounding_error = 0.00001
+
+LOG = logging.getLogger(__name__)
 
 
 def check_point_belongs_to_line(line, some_point):
@@ -21,16 +24,36 @@ def check_point_belongs_to_line(line, some_point):
             return False
     else:
         if (check_equality_with_rounding(
-                line.x1(), some_point.x()) and
-            some_point.y() >= min(
-                line.y1(),
-                line.y2()) and
-            some_point.y() <= max(
-                line.y1(),
-                line.y2())):
+                line.x1(), some_point.x()) and (
+                some_point.y() >= min(
+                    line.y1(),
+                    line.y2()) - rounding_error) and (
+                some_point.y() <= max(
+                    line.y1(),
+                    line.y2()) + rounding_error)):
             return True
         else:
             return False
+
+
+def check_line_contains_point(line, some_point):
+    if (
+        check_point_belongs_to_line(line, some_point) and (
+            some_point.x() >= (
+                min(line.x1(), line.x2()) -
+                rounding_error)) and (
+            some_point.x() <= (
+                max(line.x1(), line.x2()) +
+                rounding_error)) and (
+            some_point.y() >= (
+                min(line.y1(), line.y2()) -
+                rounding_error)) and (
+            some_point.y() <= (
+                max(line.y1(), line.y2()) +
+                rounding_error))):
+        return True
+    else:
+        return False
 
 
 def find_all_lines(item):
@@ -90,6 +113,7 @@ def find_all_lines(item):
     return parts_of_item
 
 
+# return list of QLineF: [QLineF1, QLineF2 ...]
 def find_all_lines_in_my_sc(item, me):
 
     parts_of_item = []
@@ -151,7 +175,7 @@ def find_all_lines_in_my_sc(item, me):
                     - item.boundingRect().height() / 2))))
 
     # for part in parts_of_item:
-    # print("part len = " + str(part.length()))
+    # print("parts_of_item = %s" % (parts_of_item, ))
     return parts_of_item
 
 
@@ -210,3 +234,31 @@ def remove_duplicate_points(test_polygon):
             result_points_list.append(point)
             first_point_flag = True
     return QPolygonF(result_points_list)
+
+# function filter items in vision
+# will be removed - all our parents and all childs of our parents
+def remove_parents_and_childs(item, not_filtered_items):
+    filtered_items = list(not_filtered_items)
+    # 1. find top parent of carrier_item
+    top_parent = item
+    while top_parent.parentItem() is not None:
+        top_parent = top_parent.parentItem()
+    # top_parent now is a top parent
+    not_checked_items = []
+    not_checked_items.append(top_parent)
+    while len(not_checked_items) != 0:
+        try:
+            childs = not_checked_items[0].childItems()
+            if childs is not None:
+                not_checked_items.extend(childs)
+        except AttributeError:
+            pass
+        try:
+            filtered_items.remove(
+                not_checked_items[0])
+        except ValueError:
+            pass
+        except AttributeError:
+            pass
+        not_checked_items.remove(not_checked_items[0])
+    return filtered_items

@@ -3,7 +3,7 @@ import math
 from PyQt5.QtGui import (QPixmap)
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 import battle_field
-from battle_field.items import tank
+from battle_field.items.vehicles.tank import tank
 from battle_field.items import obstacle
 
 

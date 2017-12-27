@@ -1,174 +1,66 @@
-import math
-import os
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from battle_field.items import tower
-from battle_field.items import obstacle
+from PyQt5 import QtCore, QtGui
 from battle_field.common import functions
-import battle_field
+import logging
+
+LOG = logging.getLogger(__name__)
 
 
-class Tank(QtWidgets.QGraphicsPixmapItem):
-    tank_picture_path = os.path.join(
-        os.path.split(battle_field.__file__)[0], 'images/tank.png')
-    explosion_pict_path = os.path.join(
-        os.path.split(battle_field.__file__)[0], 'images/explosion_2.png')
+class BumpChecker():
 
-    def __init__(self, scene, pos, angle, bot_flag=True):
-        QtWidgets.QGraphicsPixmapItem.__init__(self)
-        self.rect = QtWidgets.QGraphicsRectItem(
-            QtCore.QRectF(0, 0, 10, 10), self)
-        self.setPos(pos)
-        self.setRotation(angle)
-        self.speed = 0
-        self.Tank_rotation_speed = 20
-        self.setPixmap(QtGui.QPixmap(self.tank_picture_path))
-        self.setOffset(
-            - self.boundingRect().width() / 2,
-            - self.boundingRect().height() / 2)
-        self.setScale(0.15)
-        self.last_angle_time = scene.time.elapsed()
-        self.Tank_angle_period = 6000 + QtCore.qrand() % 5000
-        self.destination_angle = self.rotation()
-        self.tower = tower.Tower(scene, self, bot_flag)
-        self.bot_flag = bot_flag
-        self.cycles_of_explosion = 7
-        self.exploded = False
-        # self.health = health
-        # create special colour poligonf around our tank
-        if self.bot_flag is False:
-            self.colour_bound = QtGui.QPolygonF([
-                QtCore.QPointF(
-                    - self.boundingRect().width() / 2,
-                    - self.boundingRect().height() / 2),
-                QtCore.QPointF(
-                    self.boundingRect().width() / 2,
-                    - self.boundingRect().height() / 2),
-                QtCore.QPointF(
-                    self.boundingRect().width() / 2,
-                    self.boundingRect().height() / 2),
-                QtCore.QPointF(
-                    - self.boundingRect().width() / 2,
-                    self.boundingRect().height() / 2)])
-            self.colour_bound_item = QtWidgets.QGraphicsPolygonItem(
-                self.colour_bound, self)
-            self.colour_bound_item_pen = QtGui.QPen(
-                QtGui.QColor(0, 0, 255, 255))
-            self.colour_bound_item_pen.setWidth(10)
-            self.colour_bound_item.setPen(
-                self.colour_bound_item_pen)
-            self.colour_bound_item.setVisible(True)
+    # return
+    # position: QtCore.QPointF()
+    def bump_check(self, asker):
+        not_filtered_items = asker.scene().collidingItems(asker)
+        # find all not child items!
+        filtered_items = functions.remove_parents_and_childs(
+            asker, not_filtered_items)
+        push_away_list = [asker.pos()]
+        for item in filtered_items:
+            push_away_list.append(
+                self.push_away(
+                    asker, item))
+        # wrong way - return only last value from push away list
+        return push_away_list[-1]
+        # process push away list
 
-    # interface
-    def increase_speed(self):
-        self.speed += 1
-
-    # interface
-    def reduce_speed(self):
-        self.speed -= 1
-
-    # interface
-    def increase_angle(self):
-        self.setRotation(
-            self.rotation() + 2)
-
-    # interface
-    def reduce_angle(self):
-        self.setRotation(
-            self.rotation() - 2)
-
-    # interface
-    def make_damage(self, damage_power):
-        self.health -= damage_power
-
-    # internal for Tank, called by timer
-    def update(self):
-        self.change_pos()
-        self.bump_check()
-        # move to tank level
-        if self.bot_flag:
-            self.add_new_angle()
-            self.change_angle()
-        # explosion
-        if (self.exploded is True):
-            self.cycles_of_explosion -= 1
-        if self.cycles_of_explosion < 0:
-            self.scene().removeItem(self)
-
-    def destroy(self):
-        self.exploded = True
-        # remove our tower
-        self.scene().removeItem(
-            self.tower)
-        self.tower = None
-        self.setPixmap(
-            QtGui.QPixmap(
-                self.explosion_pict_path))
-
-    # internal for Tank
-    def change_pos(self):
-        x = self.pos().x() + self.speed * math.cos(
-            self.rotation() * math.pi / 180.0) * self.scene().dt
-        y = self.pos().y() + self.speed * math.sin(
-            self.rotation() * math.pi / 180.0) * self.scene().dt
-        self.setPos(x, y)
-
-    # internal for Tank
-    def add_new_angle(self):
-        if self.scene().time.elapsed() - self.last_angle_time > \
-                self.Tank_angle_period:
-            self.last_angle_time = self.scene().time.elapsed()
-            self.destination_angle = -45 + (QtCore.qrand() % 90)
-
-    # internal for Tank
-    def change_angle(self):
-        if (self.rotation() != self.destination_angle):
-            if (self.destination_angle - self.rotation() > 0):
-                sign = 1
-            else:
-                sign = -1
-            self.setRotation(
-                self.rotation() +
-                sign * self.Tank_rotation_speed * self.scene().dt
-            )
-
-    # internal for Tank
-    def bump_check(self):
-        item_list = self.scene().collidingItems(self)
-        for item in item_list:
-            if (isinstance(item, Tank) and item is not self or
-                    isinstance(item, obstacle.Obstacle)):
-                self.move_us(item)
-
-    # internal for Tank
-    def move_us(self, item):
-        if not self.collidesWithItem(item):
-            return
+    # return
+    # position: QtCore.QPointF()
+    def push_away(self, asker, item):
+        # new position default = current position
+        new_pos = asker.pos()
         # 1. find all lines
-        my_all_lines = functions.find_all_lines(self)
+        asker_all_lines = functions.find_all_lines(asker)
         item_all_lines = functions.find_all_lines(item)
 
         # 2. find colliding lines and dots
-        my_lines, my_dots = self.find_colliding_lines_and_dots(
-            my_all_lines, item_all_lines, item)
+        asker_lines, asker_dots = self.find_colliding_lines_and_dots(
+            asker_all_lines, item_all_lines, item)
         item_lines, item_dots = self.find_colliding_lines_and_dots(
-            item_all_lines, my_all_lines, self)
+            item_all_lines, asker_all_lines, asker)
 
         # 3. find move direction
-        move_dir = self.find_moving_vect(my_all_lines, item_all_lines, item)
+        move_dir = self.find_moving_vect(
+            asker_all_lines,
+            item_all_lines,
+            item)
+        LOG.critical("move_dir: %s" % (move_dir,))
+
         # 4. for every my and item dot inside other object
         # create projection
         full_projection_list = []
 
-        for my_dot in my_dots:
+        for asker_dot in asker_dots:
             # create parallel line:
-            par_line = QtCore.QLineF(my_dot, my_dot + move_dir.toPointF())
+            par_line = QtCore.QLineF(
+                asker_dot,
+                asker_dot + move_dir.toPointF())
             # find all collisions with all lines of item:
             dots_intersected = []
             dot_intersected = QtCore.QPointF()
             for item_line in item_lines:
-                intersect_type = par_line.intersect(item_line, dot_intersected)
+                intersect_type = par_line.intersect(
+                    item_line,
+                    dot_intersected)
                 # check unbounded and bounded intersection type
                 if ((QtCore.QLineF.BoundedIntersection == intersect_type) or
                     (QtCore.QLineF.UnboundedIntersection == intersect_type) and
@@ -189,28 +81,30 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
                             item_line.pointAt(1).y())) and
                         functions.check_point_belongs_to_line(
                             item_line, dot_intersected)):
-                    dots_intersected.append(QtCore.QPointF(dot_intersected))
+                    dots_intersected.append(
+                        QtCore.QPointF(
+                            dot_intersected))
             # all item lines checked.
             # create list of projections vectors from
             # my point to direction
-            dot_products_for_my_dot = []
+            dot_products_for_asker_dot = []
             for dot in dots_intersected:
                 # print("dot = " + str(dot))
                 vector = QtGui.QVector2D(
                     QtCore.QPointF(
-                        dot.x() - my_dot.x(),
-                        dot.y() - my_dot.y()))
-                dot_products_for_my_dot.append(
+                        dot.x() - asker_dot.x(),
+                        dot.y() - asker_dot.y()))
+                dot_products_for_asker_dot.append(
                     QtGui.QVector2D.dotProduct(vector, move_dir))
             # sort all dot product list
-            dot_products_for_my_dot = sorted(
-                dot_products_for_my_dot,
+            dot_products_for_asker_dot = sorted(
+                dot_products_for_asker_dot,
                 key=lambda value: value)
             # check that list is not empty,
             # get maximum value (-1 element)
-            if len(dot_products_for_my_dot) > 0:
+            if len(dot_products_for_asker_dot) > 0:
                 full_projection_list.append(
-                    dot_products_for_my_dot[-1])
+                    dot_products_for_asker_dot[-1])
         # for every item dots create list of collision with my lines
         for item_dot in item_dots:
             # create parallel line:
@@ -218,29 +112,33 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
             # find all collisions with all lines of item:
             dots_intersected = []
             dot_intersected = QtCore.QPointF()
-            for my_line in my_lines:
-                intersect_type = par_line.intersect(my_line, dot_intersected)
+            for asker_line in asker_lines:
+                intersect_type = par_line.intersect(
+                    asker_line,
+                    dot_intersected)
                 # check unbounded and bounded intersection type
                 # check that QtCore.QPointF belongs to QtCore.QLineF
                 if ((QtCore.QLineF.BoundedIntersection == intersect_type) or
                     (QtCore.QLineF.UnboundedIntersection == intersect_type) and
                     (
                         min(
-                            my_line.pointAt(0).x(),
-                            my_line.pointAt(1).x()) <=
+                            asker_line.pointAt(0).x(),
+                            asker_line.pointAt(1).x()) <=
                         dot_intersected.x() <=
                         max(
-                            my_line.pointAt(0).x(),
-                            my_line.pointAt(1).x())) and (
+                            asker_line.pointAt(0).x(),
+                            asker_line.pointAt(1).x())) and (
                         min(
-                            my_line.pointAt(0).y(),
-                            my_line.pointAt(1).y()) <=
+                            asker_line.pointAt(0).y(),
+                            asker_line.pointAt(1).y()) <=
                         dot_intersected.y() <=
                         max(
-                            my_line.pointAt(0).y(),
-                            my_line.pointAt(1).y()))):
+                            asker_line.pointAt(0).y(),
+                            asker_line.pointAt(1).y()))):
                     # print("add new intersect dot = " + str(dot_intersected))
-                    dots_intersected.append(QtCore.QPointF(dot_intersected))
+                    dots_intersected.append(
+                        QtCore.QPointF(
+                            dot_intersected))
             # all my lines checked.
             # create list of projections vectors from
             # item point to direction
@@ -265,12 +163,11 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
             full_projection_list,
             key=lambda value: value)
 
-        # 9. move to maximum value from projection listfull_projection_list[-1]
+        # 9. move to maximum value from full_projection_list[-1]
         if len(full_projection_list) > 0:
-            self.setPos(
-                self.pos() + (move_dir * full_projection_list[-1]).toPointF())
+            new_pos += (move_dir * full_projection_list[-1]).toPointF()
+        return new_pos
 
-    # internal for Tank
     def find_colliding_lines_and_dots(self, tested_list, second_list, item):
         lines_list = []
         dots_list = []
@@ -316,7 +213,6 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
 
         return lines_list, dots_list
 
-    # internal for Tank
     def find_moving_vect(self, my_lines, obj_lines, item):
         all_dots_list = []
         point_of_intersection = QtCore.QPointF()
@@ -330,14 +226,14 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
                     all_dots_list.append(QtCore.QPointF(point_of_intersection))
         # find lines fully inside me:
         rect = QtCore.QRectF(
-            self.mapToScene(
+            item.mapToScene(
                 QtCore.QPointF(
-                    - self.boundingRect().width() / 2,
-                    - self.boundingRect().height() / 2)),
-            self.mapToScene(
+                    - item.boundingRect().width() / 2,
+                    - item.boundingRect().height() / 2)),
+            item.mapToScene(
                 QtCore.QPointF(
-                    self.boundingRect().width() / 2,
-                    self.boundingRect().height() / 2)))
+                    item.boundingRect().width() / 2,
+                    item.boundingRect().height() / 2)))
 
         for obj_line in obj_lines:
             if (rect.contains(obj_line.p1()) and
@@ -365,5 +261,6 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
         normal_lines = sorted(
             normal_lines,
             key=lambda value: value.length())
+        LOG.critical("normal_lines sorted: %s" % (normal_lines,))
         return QtGui.QVector2D(
             normal_lines[-1].p2() - normal_lines[-1].p1()).normalized()
