@@ -56,7 +56,7 @@ class OdometerModel():
             self.angle_between_slots)
 
         if self.callback is not None:
-            self.callback(self, sign * count_of_strobes)
+            self.callback(sign * count_of_strobes)
 
     # speed measured in radians per second
     def change_speed(self, value):

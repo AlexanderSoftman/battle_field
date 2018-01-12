@@ -1,13 +1,13 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtCore
 import unittest
 import logging
 import math
-import sys
 
 from battle_field.common.bump_checker import bump_checker_new
 from battle_field.common import functions
 
 LOG = logging.getLogger(__name__)
+LOG.critical("TestBumpCheckerNew start")
 
 
 # measure
@@ -122,42 +122,6 @@ class BumpCheckerNewTestCase(unittest.TestCase):
         self.assertAlmostEqual(moving_line.p1().y(), 50)
         self.assertAlmostEqual(moving_line.p2().x(), 47.5)
         self.assertAlmostEqual(moving_line.p2().y(), -47.5)
-
-    def test_intersect_by_secant(self):
-        secant_line = QtCore.QLineF(
-            QtCore.QPointF(1000, 0),
-            QtCore.QPointF(1010, 0))
-        lines = [
-            QtCore.QLineF(
-                QtCore.QPointF(-50, -50),
-                QtCore.QPointF(-50, 50)),
-            QtCore.QLineF(
-                QtCore.QPointF(-50, 50),
-                QtCore.QPointF(50, 50)),
-            QtCore.QLineF(
-                QtCore.QPointF(50, 50),
-                QtCore.QPointF(50, - 50)),
-            QtCore.QLineF(
-                QtCore.QPointF(50, -50),
-                QtCore.QPointF(-50, -50))]
-        res = self.bump_checker_new_m.intersect_by_secant(
-            QtCore.QPointF(0, 0),
-            secant_line,
-            lines)
-        self.assertTrue(len(res) == 2)
-
-    # move line
-    def test_move_line_to_new_dot(self):
-        old_line = QtCore.QLineF(
-            QtCore.QPointF(0, 0),
-            QtCore.QPointF(1, 1))
-        new_line = self.bump_checker_new_m.move_line_to_new_dot(
-            QtCore.QPointF(100, 100), old_line)
-        self.assertEqual(new_line.angle(), old_line.angle())
-        self.assertEqual(new_line.p1(), QtCore.QPointF(100, 100))
-        self.assertTrue(
-            (math.fabs(new_line.length() - old_line.length())) <
-            functions.rounding_error)
 
 
 if __name__ == '__main__':

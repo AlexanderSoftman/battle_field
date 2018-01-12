@@ -4,9 +4,11 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from battle_field.items.vehicles.tank import tower
-from battle_field.items import obstacle
-from battle_field.common import functions
 from battle_field.common.bump_checker import bump_checker_new
+from battle_field.items import obstacle
+from battle_field.common import geometry
+from battle_field.common import functions
+
 import battle_field
 
 
@@ -184,7 +186,7 @@ class Tank(QtWidgets.QGraphicsPixmapItem):
     #                     max(
     #                         item_line.pointAt(0).y(),
     #                         item_line.pointAt(1).y())) and
-    #                     functions.check_point_belongs_to_line(
+    #                     geometry.check_point_belongs_to_line(
     #                         item_line, dot_intersected)):
     #                 dots_intersected.append(QtCore.QPointF(dot_intersected))
     #         # all item lines checked.

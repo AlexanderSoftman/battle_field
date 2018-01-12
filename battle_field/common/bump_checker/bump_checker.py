@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui
 from battle_field.common import functions
+from battle_field.common import geometry
 import logging
 
 LOG = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ class BumpChecker():
                         max(
                             item_line.pointAt(0).y(),
                             item_line.pointAt(1).y())) and
-                        functions.check_point_belongs_to_line(
+                        geometry.check_point_belongs_to_line(
                             item_line, dot_intersected)):
                     dots_intersected.append(
                         QtCore.QPointF(

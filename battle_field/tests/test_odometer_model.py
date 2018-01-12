@@ -1,6 +1,10 @@
 from battle_field.items.devices_models import odometer_model
 import unittest
 import math
+import logging
+
+LOG = logging.getLogger(__name__)
+LOG.critical("TestOdometerModel start")
 
 
 class TestOdometerModel(unittest.TestCase):

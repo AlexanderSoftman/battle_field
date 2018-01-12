@@ -4,6 +4,7 @@ import logging
 import math
 
 from battle_field.common import functions
+from battle_field.common import geometry
 from battle_field.items.vehicles.tank import bullet
 
 LOG = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class LidarModel():
                     (QtCore.QLineF.UnboundedIntersection ==
                         intersection_type)):
                 if (
-                    functions.check_line_contains_point(
+                    geometry.check_line_contains_point(
                         line, point_of_intersection)):
                     # go to global system coordinate
                     point_of_intersection_global = (
