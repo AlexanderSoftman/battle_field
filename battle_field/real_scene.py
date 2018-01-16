@@ -1,7 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtNetwork
-import enum
 import json
 import logging
 
@@ -13,31 +12,15 @@ from battle_field.items.vehicles import four_wheels
 from battle_field.items.vehicles import articulated
 from battle_field.items.vehicles import cart
 
-
 LOG = logging.getLogger(__name__)
 
 
-class User(enum.Enum):
-    TANK = 1
-    FRONT_DRIVING_FOUR_WHEELS = 2
-    ARTICULATED_FOUR_WHEELS = 3
-    CART = 4
-
-
-class SceneWrapper(QtWidgets.QGraphicsScene):
-
-    # choose one of this guys
-    # TANK
-    # FRONT_DRIVING_FOUR_WHEELS
-    # ARTICULATED_FOUR_WHEELS
-    # CART
-    user = User.TANK
-
-    update_freq = 30.0
+class RealScene(QtWidgets.QGraphicsScene):
 
     tank_bots_count_maximum = 2
     obstackles_count_maximum = 10
     safety_objects_distance = 100
+    vehicle = None
 
     # define buttons
     buttons = {
@@ -60,21 +43,30 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
 
     port = 9999
 
-    def __init__(self, isw, *xxx, **kwargs):
+    def __init__(
+        self,
+        scene_rect,
+        immovables_pos,
+        update_freq,
+        *xxx,
+            **kwargs):
         QtWidgets.QGraphicsScene.__init__(self, *xxx, **kwargs)
-        self.isw = isw
-        self.setSceneRect(-1000, -1000, 2000, 2000)
+        self.setSceneRect(scene_rect)
         self.setItemIndexMethod(QtWidgets.QGraphicsScene.NoIndex)
         self.path_creator = path_creator.PathCreator(self, [obstacle.Obstacle])
         # create timer
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.timerEvent)
-        self.dt = 1.0 / self.update_freq
-        self.timer.start(self.dt * 1000)
-        self.time = QtCore.QTime()
-        self.time.start()
-        self.create_user()
-        self.create_field()
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.timerEvent)
+        # self.update_freq = update_freq
+        # self.dt = 1.0 / self.update_freq
+        # self.timer.start(self.dt * 1000)
+        # self.time = QtCore.QTime()
+        # self.time.start()
+        for immovable_pos in immovables_pos:
+            self.addItem(obstacle.Obstacle(
+                self, immovable_pos, 0))
+
+        # self.create_field()
         # self.create_enemies()
         # self.init_server()
 
@@ -105,10 +97,10 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
             event.scenePos())
 
     # check by timer that we have enough tanks on battle
-    def timerEvent(self):
+    def update(self):
         for item in self.items():
             item.update()
-        self.isw.update()
+        # self.isw.update()
         if len(self.items()) < self.tank_bots_count_maximum:
             pos_x = -1000 + QtCore.qrand() % 2000
             pos_y = -1000 + QtCore.qrand() % 2000
@@ -121,140 +113,76 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
     def eventFilter(self, object, event):
         if event.type() == QtCore.QEvent.KeyPress:
             if event.key() == self.buttons["left"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.reduce_angle()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.reduce_angle()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         four_wheels.FourWheels):
-                    self.my_vehicle.reduce_wa()
+                    self.vehicle.reduce_wa()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         articulated.Articulated):
-                    self.my_vehicle.reduce_angle()
+                    self.vehicle.reduce_angle()
             elif event.key() == self.buttons["right"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.increase_angle()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.increase_angle()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         four_wheels.FourWheels):
-                    self.my_vehicle.increase_wa()
+                    self.vehicle.increase_wa()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         articulated.Articulated):
-                    self.my_vehicle.increase_angle()
+                    self.vehicle.increase_angle()
             elif event.key() == self.buttons["up"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.increase_speed()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.increase_speed()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         four_wheels.FourWheels):
-                    self.my_vehicle.increase_wheels_speed()
+                    self.vehicle.increase_wheels_speed()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         articulated.Articulated):
-                    self.my_vehicle.increase_wheels_speed()
+                    self.vehicle.increase_wheels_speed()
             elif event.key() == self.buttons["down"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.reduce_speed()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.reduce_speed()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         four_wheels.FourWheels):
-                    self.my_vehicle.reduce_wheels_speed()
+                    self.vehicle.reduce_wheels_speed()
                 elif isinstance(
-                    self.my_vehicle,
+                    self.vehicle,
                         articulated.Articulated):
-                    self.my_vehicle.reduce_wheels_speed()
+                    self.vehicle.reduce_wheels_speed()
             elif event.key() == self.buttons["cntrl"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.tower.reduce_rotation_speed()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.tower.reduce_rotation_speed()
             elif event.key() == self.buttons["alt"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.tower.increase_rotation_speed()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.tower.increase_rotation_speed()
             elif event.key() == self.buttons["space"]:
-                if isinstance(self.my_vehicle, tank.Tank):
-                    self.my_vehicle.tower.create_bullet()
+                if isinstance(self.vehicle, tank.Tank):
+                    self.vehicle.tower.create_bullet()
             elif event.key() == self.buttons["q"]:
-                if isinstance(self.my_vehicle, cart.Cart):
-                    self.my_vehicle.increase_left_ws()
+                if isinstance(self.vehicle, cart.Cart):
+                    self.vehicle.increase_left_ws()
             elif event.key() == self.buttons["a"]:
-                if isinstance(self.my_vehicle, cart.Cart):
-                    self.my_vehicle.reduce_left_ws()
+                if isinstance(self.vehicle, cart.Cart):
+                    self.vehicle.reduce_left_ws()
             elif event.key() == self.buttons["e"]:
-                if isinstance(self.my_vehicle, cart.Cart):
-                    self.my_vehicle.increase_right_ws()
+                if isinstance(self.vehicle, cart.Cart):
+                    self.vehicle.increase_right_ws()
             elif event.key() == self.buttons["d"]:
-                if isinstance(self.my_vehicle, cart.Cart):
-                    self.my_vehicle.reduce_right_ws()
+                if isinstance(self.vehicle, cart.Cart):
+                    self.vehicle.reduce_right_ws()
             # LOG.debug("pressed button: %s" % (event.key(), ))
             return True
         else:
             return QtWidgets.QGraphicsScene.eventFilter(self, object, event)
 
-    def create_user(self):
-        if self.user == User.ARTICULATED_FOUR_WHEELS:
-            self.my_vehicle = articulated.Articulated(
-                scene=self,
-                frame_length={
-                    "back": 50,
-                    "front": 30},
-                init_pos={
-                    "position": QtCore.QPointF(0, 0),
-                    "heading": 0},
-                wheel_size={
-                    "breadth": 5,
-                    "diameter": 20})
-        elif self.user == User.FRONT_DRIVING_FOUR_WHEELS:
-            self.my_vehicle = four_wheels.FourWheels(
-                self,
-                body_size={
-                    "width": 100,
-                    "height": 50
-                },
-                init_pos={
-                    "position": QtCore.QPointF(0, 0),
-                    "heading": -45
-                },
-                wheel_size={
-                    "breadth": 10,
-                    "diameter": 30
-                })
-        elif self.user == User.TANK:
-            self.my_vehicle = tank.Tank(
-                self, QtCore.QPointF(-100, 0), 0, False)
-        elif self.user == User.CART:
-            body_size = {
-                "x": 100,
-                "y": 50
-            }
-            wheel_size = {
-                "breadth": 5,
-                "diameter": 20
-            }
-            init_pos = {
-                "position": QtCore.QPointF(0, 0),
-                "heading": 0
-            }
-            self.my_vehicle = cart.Cart(
-                self,
-                self.update_freq,
-                self.isw.callbacks,
-                False,
-                body_size=body_size,
-                init_pos=init_pos,
-                wheel_size=wheel_size)
-            # create duplication on isw
-            self.isw.vehicle = cart.Cart(
-                self.isw,
-                self.update_freq,
-                None,
-                False,
-                body_size=body_size,
-                init_pos=init_pos,
-                wheel_size=wheel_size)
-            self.isw.addItem(self.isw.vehicle)
-        self.addItem(self.my_vehicle)
-
-    def create_field(self):
+    # def create_field(self):
         # simple field
         # self.enemy_tank = tank.Tank(
             # self, QtCore.QPointF(700, 0), 180, True)
@@ -264,12 +192,12 @@ class SceneWrapper(QtWidgets.QGraphicsScene):
         # self.addItem(self.enemy_tank_2)
         # return
         # create obstacle.Obstacles
-        for i in range(self.obstackles_count_maximum):
-            pos_x = -1000 + QtCore.qrand() % 2000
-            pos_y = -1000 + QtCore.qrand() % 2000
-            pos = QtCore.QPointF(pos_x, pos_y)
+        # for i in range(self.obstackles_count_maximum):
+            # pos_x = -1000 + QtCore.qrand() % 2000
+            # pos_y = -1000 + QtCore.qrand() % 2000
+            # pos = QtCore.QPointF(pos_x, pos_y)
             # angle = 0
-            self.addItem(obstacle.Obstacle(self, pos, 0))
+            # self.addItem(obstacle.Obstacle(self, pos, 0))
 
     def create_enemies(self):
         # just one enemy

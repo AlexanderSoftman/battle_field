@@ -21,7 +21,6 @@ class Lidar(QtWidgets.QGraphicsPixmapItem):
         timer_update_freq,
         sensor_update_freq,
         scan_sector,
-        callback,
         points_in_sector,
         lidar_maximum_distance,
             error_model):
@@ -43,7 +42,6 @@ class Lidar(QtWidgets.QGraphicsPixmapItem):
             sensor_update_freq,
             scan_sector,
             points_in_sector,
-            callback,
             parent_dist_point.x(),
             parent,
             None)

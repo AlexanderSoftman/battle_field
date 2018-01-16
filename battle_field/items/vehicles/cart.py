@@ -30,7 +30,6 @@ class Cart(QtWidgets.QGraphicsItemGroup):
         self,
         scene,
         update_freq,
-        info_callbacks,
         show_radius,
         body_size,
         init_pos,
@@ -90,42 +89,28 @@ class Cart(QtWidgets.QGraphicsItemGroup):
         self.setPos(init_pos["position"])
         self.setRotation(init_pos["heading"])
 
-        # 5. create two odometers
-        left_odometer_callback = None
-        right_odometer_callback = None
-
-        if info_callbacks is not None and "odometer_left" in info_callbacks:
-            left_odometer_callback = info_callbacks["odometer_left"]
-        if info_callbacks is not None and "odometer_right" in info_callbacks:
-            right_odometer_callback = info_callbacks["odometer_right"]
-
         self.odometers = {
             "left": odometer_model.OdometerModel(
                 self.count_of_odometer_slots,
                 0,
                 self.update_freq,
-                left_odometer_callback,
                 None),
             "right":
                 odometer_model.OdometerModel(
                 self.count_of_odometer_slots,
                 0,
                 self.update_freq,
-                right_odometer_callback,
                 None)
         }
 
-        # 6. create lidar
-        if info_callbacks is not None and "lidar" in info_callbacks:
-            self.lidar = lidar.Lidar(
-                self,
-                30,
-                10,
-                30,
-                info_callbacks["lidar"],
-                180,
-                800,
-                None)
+        self.lidar = lidar.Lidar(
+            self,
+            30,
+            10,
+            30,
+            180,
+            800,
+            None)
 
     def increase_left_ws(self):
         self.model.increase_left_ws()

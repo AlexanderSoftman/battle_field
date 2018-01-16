@@ -1,7 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 import logging
-import math
 
 from battle_field.common import functions
 from battle_field.common import geometry
@@ -16,8 +15,6 @@ LOG = logging.getLogger(__name__)
 # make all calculation and save them to self.memory parameters
 # which is list of tuples [(QPointF coordinate, trust_value 0..1), ...]
 class LidarModel():
-
-    callback = None
 
     # input values:
     # 1) timer_update_freq, Hz - frequency of call update
@@ -35,7 +32,6 @@ class LidarModel():
         sensor_update_freq,
         scan_sector,
         points_in_sector,
-        callback,
         lidar_maximum_distance,
         carrier_item,
             error_model):
@@ -53,7 +49,6 @@ class LidarModel():
         self.memory = []
         # scanning shape - ellipse
         self.build_sector_of_scanning()
-        self.callback = callback
 
     # we can scan map or not
     def update(self):
@@ -64,12 +59,6 @@ class LidarModel():
                 self.carrier_item.scenePos(),
                 self.find_carrier_angle(
                     self.carrier_item))
-            if self.callback:
-                self.callback(
-                    self.carrier_item,
-                    self.memory,
-                    - self.lidars_half_angle,
-                    self.angle_step)
         else:
             self.counter += 1
 

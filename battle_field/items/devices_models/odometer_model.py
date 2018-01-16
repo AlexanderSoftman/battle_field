@@ -13,7 +13,7 @@ class OdometerModel():
     # residue of rotation
     residue = 0
     speed_last_sign = 1
-    callback = None
+    count_of_strobes_with_sign = 0
 
     # input values:
     # 1. count_of_slots on disk
@@ -26,7 +26,6 @@ class OdometerModel():
         count_of_slots,
         angle_speed_ps,
         update_freq,
-        callback,
             error_model):
         self.update_freq = update_freq
         self.count_of_slots = count_of_slots
@@ -36,8 +35,6 @@ class OdometerModel():
             self.speed_last_sign = -1
         self.angle_speed_pu = self.angle_speed_ps / self.update_freq
         self.angle_between_slots = 2 * math.pi / self.count_of_slots
-        if callback is not None:
-            self.callback = callback
 
     # called update_freq times per second
     def update(self):
@@ -54,9 +51,9 @@ class OdometerModel():
             (self.residue +
                 self.angle_speed_pu),
             self.angle_between_slots)
-
-        if self.callback is not None:
-            self.callback(sign * count_of_strobes)
+        # value for reading
+        self.count_of_strobes_with_sign = (
+            sign * count_of_strobes)
 
     # speed measured in radians per second
     def change_speed(self, value):
